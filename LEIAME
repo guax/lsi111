@@ -1,0 +1,12 @@
+LSI111
+======
+Compilador para linguagem lsi111.
+
+Autores: Henrique Grolli Bassotto e Jonathan Kuntz Fornari
+
+Instrucoes
+----------
+
+Para executar a interface do compilador use
+java -jar runnable/lsi111.jar
+
