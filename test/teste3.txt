@@ -1,0 +1,14 @@
+const caracter id = 'pato d''agua';  
+
+inicio
+	se x = 4 entao
+	inicio
+		x := '3';
+		y := '5';
+	fim
+	senao
+		x := '5';
+	k := 2+3*4/8;
+	leia (id);
+	escreva (id);
+fim.

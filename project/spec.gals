@@ -5,8 +5,9 @@ Language = Java
 ScannerName = Lexico
 ParserName = Sintatico
 SemanticName = Semantico
+Package = br.ufsc.inf.lsi111.compilador.gals
 ScannerCaseSensitive = true
-ScannerTable = Full
+ScannerTable = Compact
 Input = Stream
 Parser = LL
 #RegularDefinitions
@@ -47,7 +48,9 @@ id:({L}|@{LD}) (@?{LD}|_?{LD})*
 
 num_real:({NUM}\.{NUM}?|{NUM}?\.{NUM})((e|E)(\+|\-)?{D}{D}+)?
 num_int:{NUM}((e|E)(\+|\-)?{D}{D}+)?
-const:'([^']|'')*'
+literal:'([^']|'')*'
+comentlinha:#.*
+comentbloco: "/*" ([^"*"]|"*"+[^"/"])* "*/"
 
 // Palavras reservadas
 programa=id:"programa"
@@ -80,12 +83,13 @@ enquanto=id:"enquanto"
 ref=id:"ref"
 val=id:"val"
 intervalo=id:"intervalo"
-literal=id:"literal"
+const=id:"const"
 
 
 #NonTerminals
-<comando>
+<programa>
 <comandos>
+<comando>
 <constante>
 <constante_explicita>
 <dcl_const>
@@ -102,7 +106,6 @@ literal=id:"literal"
 <op_mult>
 <oprel>
 <parametros>
-<programa>
 <rcomid>
 <rep_comando>
 <rep_expressao>
@@ -123,25 +126,25 @@ literal=id:"literal"
 <declaracoes> ::=  <dcl_const>  <dcl_var>  <dcl_procs>  ;
 
 <dcl_const> ::= const   <tipo_pre_def>   id    "="   <constante>   ";"  <dcl_const>
-                      |   Ã®  ;
+                      |   î  ;
 
-<dcl_var> ::= var   <lid>   ":"   <tipo>     ";"    <dcl_var>  |  Ã® ; 
+<dcl_var> ::= var   <lid>   ":"   <tipo>     ";"    <dcl_var>  |  î ; 
 
-<dcl_procs> ::= <dcl_proc>   ";"   <dcl_procs>   |   Ã® ; 
+<dcl_procs> ::= <dcl_proc>   ";"   <dcl_procs>   |   î ; 
 
 <dcl_proc> ::= proc    id    <parametros> ";" <declaracoes>  <comandos>
       | funcao    id   <parametros>  ":"  <tipo_pre_def> ";" <declaracoes> <comandos>  ;                                      
 
-<parametros> ::=   "("    <listapar>    ")"    |    Ã® ;  
+<parametros> ::=   "("    <listapar>    ")"    |    î ;  
 
 <listapar> ::=  ref    <lid>    ":"  <tipo_pre_def>    <rep_listapar>        
       	            | val    <lid>    ":"  <tipo_pre_def>    <rep_listapar>    ; 
 
-<rep_listapar> ::=   ";"    <listapar>  |   Ã®  ;
+<rep_listapar> ::=   ";"    <listapar>  |   î  ;
 
 <lid> ::=  id <rep_id>  ;
 
-<rep_id> ::= ","   id     <rep_id>   |    Ã® ; 
+<rep_id> ::= ","   id     <rep_id>   |    î ; 
 
 <constante> ::=  id    |  <constante_explicita>     ;
 
@@ -155,7 +158,7 @@ literal=id:"literal"
 
 <comandos> ::= inicio   <comando>  <rep_comando>  fim ; 
 
-<rep_comando> ::=   ";"   <comando>    <rep_comando>  |   Ã® ;  
+<rep_comando> ::=   ";"   <comando>    <rep_comando>  |   î ;  
 
 <comando> ::= id      <rcomid>    
             | inicio <comando>  <rep_comando>  fim  
@@ -163,31 +166,31 @@ literal=id:"literal"
             | enquanto  <expressao>      faca <comando> 
 	  | repita  <comando>    ate   <expressao>                                     
             | leia   "("  <lid>   ")"                                       
-            | escreva   "("   <expressao>    <rep_expressao>    ")"    |   Ã® ; 
+            | escreva   "("   <expressao>    <rep_expressao>    ")"    |   î ; 
 
-<senaoparte> ::= senao  <comando>  | Ã® ; 
+<senaoparte> ::= senao  <comando>  | î ; 
 
 <rcomid> ::= ":="    <expressao>    
            | "["    <expressao>    "]"     ":="    <expressao>      
-           | "("    <expressao>   <rep_expressao>   ")"    |      Ã®       ; 
+           | "("    <expressao>   <rep_expressao>   ")"    |      î       ; 
 
-<rep_expressao>  ::=  ","   <expressao>     <rep_expressao>    |     Ã®       ;
+<rep_expressao>  ::=  ","   <expressao>     <rep_expressao>    |     î       ;
 
 <expressao>  ::=   <expsimp>   <resto_expressao> ; 
 
-<resto_expressao> ::=   <oprel>      <expsimp>    |    Ã® ; 
+<resto_expressao> ::=   <oprel>      <expsimp>    |    î ; 
 
 <oprel> ::= "="     | "<"     | ">"     | ">="     | "<="     | "<>"     ; 
 
 <expsimp> ::= <termo>     <rep_expsimp>      ; 
 
-<rep_expsimp> ::=   <op_add>     <termo>     <rep_expsimp>     |     Ã® ;                       
+<rep_expsimp> ::=   <op_add>     <termo>     <rep_expsimp>     |     î ;                       
 
 <op_add> ::=   "+"   |    "-"    |  ou    ; 
 
 <termo> ::= <fator>      <rep_termo>     ; 
 
-<rep_termo> ::= <op_mult>      <fator>      <rep_termo>    |    Ã®  ; 
+<rep_termo> ::= <op_mult>      <fator>      <rep_termo>    |    î  ; 
 
 <op_mult> ::= "*"       | "/"        | e     ; 
 
@@ -197,6 +200,7 @@ literal=id:"literal"
 <variavel> ::= id      <rvar>   ;  
                             
 <rvar> ::=  "("   <expressao>    <rep_expressao>     ")"     
-         |  "["    <expressao>      "]"    |   Ã® ; 
+         |  "["    <expressao>      "]"    |   î ; 
 
 <constante_explicita> ::= num_int     | num_real     | falso    | verdadeiro    | literal     ;
+

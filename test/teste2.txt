@@ -1,0 +1,2 @@
+const caracter id = 'pato d''agua';  
+inicio leia (id); escreva (id); fim.
