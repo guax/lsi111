@@ -40,8 +40,13 @@ NUM:{D}+
 "<="
 ">="
 
-// Ignorando espacos
+// == Tokens Ignorados ==
+// espacos em branco
 :[\s\t\n\r]*
+// Comentario de Linha
+:#.*
+// Comentario de bloco
+: "/*" ([^"*"]|"*"+[^"/"])* "*/"
 
 // Identificadores
 id:({L}|@{LD}) (@?{LD}|_?{LD})*
@@ -49,11 +54,8 @@ id:({L}|@{LD}) (@?{LD}|_?{LD})*
 num_real:({NUM}\.{NUM}?|{NUM}?\.{NUM})((e|E)(\+|\-)?{D}{D}+)?
 num_int:{NUM}((e|E)(\+|\-)?{D}{D}+)?
 literal:'([^']|'')*'
-comentlinha:#.*
-comentbloco: "/*" ([^"*"]|"*"+[^"/"])* "*/"
 
 // Palavras reservadas
-programa=id:"programa"
 var=id:"var"
 booleano=id:"booleano"
 cadeia=id:"cadeia"
@@ -126,25 +128,25 @@ const=id:"const"
 <declaracoes> ::=  <dcl_const>  <dcl_var>  <dcl_procs>  ;
 
 <dcl_const> ::= const   <tipo_pre_def>   id    "="   <constante>   ";"  <dcl_const>
-                      |   î  ;
+                      |   Ã®  ;
 
-<dcl_var> ::= var   <lid>   ":"   <tipo>     ";"    <dcl_var>  |  î ; 
+<dcl_var> ::= var   <lid>   ":"   <tipo>     ";"    <dcl_var>  |  Ã® ; 
 
-<dcl_procs> ::= <dcl_proc>   ";"   <dcl_procs>   |   î ; 
+<dcl_procs> ::= <dcl_proc>   ";"   <dcl_procs>   |   Ã® ; 
 
 <dcl_proc> ::= proc    id    <parametros> ";" <declaracoes>  <comandos>
-      | funcao    id   <parametros>  ":"  <tipo_pre_def> ";" <declaracoes> <comandos>  ;                                      
+      | funcao    id   <parametros>  ":"  <tipo_pre_def> ";" <declaracoes> <comandos>  ;
 
-<parametros> ::=   "("    <listapar>    ")"    |    î ;  
+<parametros> ::=   "("    <listapar>    ")"    |    Ã® ;  
 
 <listapar> ::=  ref    <lid>    ":"  <tipo_pre_def>    <rep_listapar>        
       	            | val    <lid>    ":"  <tipo_pre_def>    <rep_listapar>    ; 
 
-<rep_listapar> ::=   ";"    <listapar>  |   î  ;
+<rep_listapar> ::=   ";"    <listapar>  |   Ã®  ;
 
 <lid> ::=  id <rep_id>  ;
 
-<rep_id> ::= ","   id     <rep_id>   |    î ; 
+<rep_id> ::= ","   id     <rep_id>   |    Ã® ; 
 
 <constante> ::=  id    |  <constante_explicita>     ;
 
@@ -158,7 +160,7 @@ const=id:"const"
 
 <comandos> ::= inicio   <comando>  <rep_comando>  fim ; 
 
-<rep_comando> ::=   ";"   <comando>    <rep_comando>  |   î ;  
+<rep_comando> ::=   ";"   <comando>    <rep_comando>  |   Ã® ;  
 
 <comando> ::= id      <rcomid>    
             | inicio <comando>  <rep_comando>  fim  
@@ -166,31 +168,31 @@ const=id:"const"
             | enquanto  <expressao>      faca <comando> 
 	  | repita  <comando>    ate   <expressao>                                     
             | leia   "("  <lid>   ")"                                       
-            | escreva   "("   <expressao>    <rep_expressao>    ")"    |   î ; 
+            | escreva   "("   <expressao>    <rep_expressao>    ")"    |   Ã® ; 
 
-<senaoparte> ::= senao  <comando>  | î ; 
+<senaoparte> ::= senao  <comando>  | Ã® ; 
 
 <rcomid> ::= ":="    <expressao>    
            | "["    <expressao>    "]"     ":="    <expressao>      
-           | "("    <expressao>   <rep_expressao>   ")"    |      î       ; 
+           | "("    <expressao>   <rep_expressao>   ")"    |      Ã®       ; 
 
-<rep_expressao>  ::=  ","   <expressao>     <rep_expressao>    |     î       ;
+<rep_expressao>  ::=  ","   <expressao>     <rep_expressao>    |     Ã®       ;
 
 <expressao>  ::=   <expsimp>   <resto_expressao> ; 
 
-<resto_expressao> ::=   <oprel>      <expsimp>    |    î ; 
+<resto_expressao> ::=   <oprel>      <expsimp>    |    Ã® ; 
 
 <oprel> ::= "="     | "<"     | ">"     | ">="     | "<="     | "<>"     ; 
 
 <expsimp> ::= <termo>     <rep_expsimp>      ; 
 
-<rep_expsimp> ::=   <op_add>     <termo>     <rep_expsimp>     |     î ;                       
+<rep_expsimp> ::=   <op_add>     <termo>     <rep_expsimp>     |     Ã® ;
 
 <op_add> ::=   "+"   |    "-"    |  ou    ; 
 
 <termo> ::= <fator>      <rep_termo>     ; 
 
-<rep_termo> ::= <op_mult>      <fator>      <rep_termo>    |    î  ; 
+<rep_termo> ::= <op_mult>      <fator>      <rep_termo>    |    Ã®  ; 
 
 <op_mult> ::= "*"       | "/"        | e     ; 
 
@@ -200,7 +202,7 @@ const=id:"const"
 <variavel> ::= id      <rvar>   ;  
                             
 <rvar> ::=  "("   <expressao>    <rep_expressao>     ")"     
-         |  "["    <expressao>      "]"    |   î ; 
+         |  "["    <expressao>      "]"    |   Ã® ; 
 
 <constante_explicita> ::= num_int     | num_real     | falso    | verdadeiro    | literal     ;
 
