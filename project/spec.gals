@@ -87,7 +87,6 @@ val=id:"val"
 intervalo=id:"intervalo"
 const=id:"const"
 
-
 #NonTerminals
 <programa>
 <comandos>
