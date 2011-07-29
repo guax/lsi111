@@ -14,49 +14,48 @@ import br.ufsc.inf.lsi111.compilador.gals.SyntaticError;
 import br.ufsc.inf.lsi111.compilador.gals.Token;
 
 /**
- * Classe que serve como fachada para executar a invocaÁ„o dos analisadores
- * lÈxico, sint·tico e futuramente sem‚ntica.
+ * Classe que serve como fachada para executar a invoca√ß√£o dos analisadores
+ * l√©xico, sint√°tico e futuramente sem√¢ntica.
  * 
- * Em padrıes de projeto de software, um faÁade (fachada em francÍs) È um objeto
+ * Em padr√µes de projeto de software, um fa√ßade (fachada em franc√™s) √© um objeto
  * que disponibiliza uma interface simplificada para as funcionalidades de
  * uma API.
  * 
  */
 public class CompiladorFacade {
 
-	public String executaAnalisadorLexico(
-			Highlighter.HighlightPainter myHighlightPainter,
-			Highlighter hilite, JTextArea sourceText) throws LexicalError,
-			BadLocationException, Exception {
-		Lexico lexico = new Lexico();
-		lexico.setInput(sourceText.getText());
-		Token tk = null;
-		do {
-			tk = lexico.nextToken();
-			if (tk != null) {
-				if (tk.getId() == Lexico.t_programa
-						|| tk.getId() == Lexico.t_proc
-						|| tk.getId() == Lexico.t_funcao) {
-					int start = tk.getPosition();
-					int end = Utilities.getParagraphElement(sourceText, start)
-							.getEndOffset();
-					hilite.addHighlight(tk.getPosition(), end,
-							myHighlightPainter);
-				}
-			}
-		} while (tk != null);
+    public String executaAnalisadorLexico(
+            Highlighter.HighlightPainter myHighlightPainter,
+            Highlighter hilite, JTextArea sourceText) throws LexicalError,
+            BadLocationException, Exception {
+        Lexico lexico = new Lexico();
+        lexico.setInput(sourceText.getText());
+        Token tk = null;
+        do {
+            tk = lexico.nextToken();
+            if (tk != null) {
+                if (tk.getId() == Lexico.t_programa
+                        || tk.getId() == Lexico.t_proc
+                        || tk.getId() == Lexico.t_funcao) {
+                    int start = tk.getPosition();
+                    int end = Utilities.getParagraphElement(sourceText, start).getEndOffset();
+                    hilite.addHighlight(tk.getPosition(), end,
+                            myHighlightPainter);
+                }
+            }
+        } while (tk != null);
 
-		return "O programa fonte est· lexicamente correto.";
-	}
+        return "O programa fonte est√° lexicamente correto.";
+    }
 
-	public String executaAnalisadorSintatico(String text) throws LexicalError,
-			SyntaticError, SemanticError, Exception {
-		Lexico lexico = new Lexico();
-		lexico.setInput(text);
-		Sintatico syntactic = new Sintatico();
-		Semantico semantic = new Semantico();
-		// Executa an·lise
-		syntactic.parse(lexico, semantic);
-		return "O programa fonte est· sintaticamente correto.";
-	}
+    public String executaAnalisadorSintatico(String text) throws LexicalError,
+            SyntaticError, SemanticError, Exception {
+        Lexico lexico = new Lexico();
+        lexico.setInput(text);
+        Sintatico syntactic = new Sintatico();
+        Semantico semantic = new Semantico();
+        // Executa an√°lise
+        syntactic.parse(lexico, semantic);
+        return "O programa fonte est√° sintaticamente correto.";
+    }
 }
