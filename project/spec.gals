@@ -122,86 +122,94 @@ const=id:"const"
 <tipo_pre_def>
 <variavel>
 #Grammar
-<programa> ::= <declaracoes>  <comandos>  "." ; 
+<programa> ::= #100 <declaracoes>  <comandos>  "." ;
 
 <declaracoes> ::=  <dcl_const>  <dcl_var>  <dcl_procs>  ;
 
-<dcl_const> ::= const   <tipo_pre_def>   id    "="   <constante>   ";"  <dcl_const>
+<dcl_const> ::= const   <tipo_pre_def>   id #101    "="   <constante> #102   ";"  <dcl_const>
                       |   î  ;
 
-<dcl_var> ::= var   <lid>   ":"   <tipo>     ";"    <dcl_var>  |  î ; 
+<dcl_var> ::= var  #103 <lid> #104 ":"   <tipo> #105 ";"    <dcl_var>  |  î ; 
 
 <dcl_procs> ::= <dcl_proc>   ";"   <dcl_procs>   |   î ; 
 
-<dcl_proc> ::= proc    id    <parametros> ";" <declaracoes>  <comandos>
-      | funcao    id   <parametros>  ":"  <tipo_pre_def> ";" <declaracoes> <comandos>  ;
+<dcl_proc> ::= proc    id #106 <parametros> #107 ";" <declaracoes>  <comandos> #108
+      | funcao    id #109 <parametros> #107  ":"  <tipo_pre_def> #110 ";" <declaracoes> <comandos> #108;
 
 <parametros> ::=   "("    <listapar>    ")"    |    î ;  
 
-<listapar> ::=  ref    <lid>    ":"  <tipo_pre_def>    <rep_listapar>        
-      	            | val    <lid>    ":"  <tipo_pre_def>    <rep_listapar>    ; 
+<listapar> ::= ref   #111   <lid> #112   ":"  <tipo_pre_def> #113  <rep_listapar>
+      	           | val   #114  <lid>  #112 ":"  <tipo_pre_def>  #113  <rep_listapar>  ;
 
 <rep_listapar> ::=   ";"    <listapar>  |   î  ;
 
-<lid> ::=  id <rep_id>  ;
 
-<rep_id> ::= ","   id     <rep_id>   |    î ; 
+<lid>   ::=  id  #115  <rep_id>  ;
 
-<constante> ::=  id    |  <constante_explicita>     ;
+<rep_id> ::= ","   id  #115    <rep_id>   |    î ; 
 
-<tipo> ::=  <tipo_pre_def>
-             |  intervalo  <constante>  ".."   <constante>
- 	   |  cadeia  "["   <constante>     "]"      
-             |  vetor    "["   <constante>     "]"  de  <tipo_pre_def> ; 
+
+<constante> ::=  id  #116  |  <constante_explicita>     ;
+
+<tipo> ::=  <tipo_pre_def> 
+              |  intervalo  <constante> #117  ".."   <constante>   #118  
+ 	    |  cadeia  "["   <constante>   #119  "]"      
+              |   vetor    "["   <constante>   #120  "]"  de  <tipo_pre_def> #121 ; 
  
-<tipo_pre_def> ::=  inteiro   |  real    |  booleano   |  caracter      ; 
+<tipo_pre_def> ::=  inteiro  #122 |   real #123 
+                              | booleano #124 |   caracter  #125     ; 
 
 
 <comandos> ::= inicio   <comando>  <rep_comando>  fim ; 
 
 <rep_comando> ::=   ";"   <comando>    <rep_comando>  |   î ;  
 
-<comando> ::= id      <rcomid>    
-            | inicio <comando>  <rep_comando>  fim  
-            | se  <expressao>      entao <comando> <senaoparte> 
-            | enquanto  <expressao>      faca <comando> 
-	  | repita  <comando>    ate   <expressao>                                     
-            | leia   "("  <lid>   ")"                                       
-            | escreva   "("   <expressao>    <rep_expressao>    ")"    |   î ; 
+<comando> ::= id  #126    <rcomid>    
+            | inicio <comandos> fim  
+            | se  <expressao>   #127    entao <comando> <senaoparte> 
+            | enquanto  <expressao>  #127 faca <comando> 
+	  | repita  <comando>    ate   <expressao>  #127                                    
+            | leia   "(" #128  <lid>   ")"                                       
+            | escreva   "("   <expressao> #129  <rep_expressao> ")"    |   î ; 
 
 <senaoparte> ::= senao  <comando>  | î ; 
 
-<rcomid> ::= ":="    <expressao>    
-           | "["    <expressao>    "]"     ":="    <expressao>      
-           | "("    <expressao>   <rep_expressao>   ")"    |      î       ; 
+<rcomid> ::= #130 ":="    <expressao>    #131
+           | "[" #132 <expressao> #133 "]"     ":="    <expressao>     #131
+           | "(" #134 <expressao>  #135 <rep_expressao> ")"  #136
+           |   î   #137 ; 
 
-<rep_expressao>  ::=  ","   <expressao>     <rep_expressao>    |     î       ;
+<rep_expressao>  ::=  ","  <expressao>  #138   <rep_expressao>    |    î ;
 
-<expressao>  ::=   <expsimp>   <resto_expressao> ; 
+<expressao>  ::=   <expsimp> #139  <resto_expressao> ;
 
-<resto_expressao> ::=   <oprel>      <expsimp>    |    î ; 
+<resto_expressao> ::=   <oprel>      <expsimp>  #140   |    î ; 
 
 <oprel> ::= "="     | "<"     | ">"     | ">="     | "<="     | "<>"     ; 
 
-<expsimp> ::= <termo>     <rep_expsimp>      ; 
 
-<rep_expsimp> ::=   <op_add>     <termo>     <rep_expsimp>     |     î ;
+<expsimp> ::= <termo>  #147    <rep_expsimp>      ; 
 
-<op_add> ::=   "+"   |    "-"    |  ou    ; 
+<rep_expsimp> ::= <op_add>   #148  <termo>  #149  <rep_expsimp>     |    î ;                       
 
-<termo> ::= <fator>      <rep_termo>     ; 
+<op_add> ::=  "+"  #150  | "-"  #151    | ou   #152  ; 
 
-<rep_termo> ::= <op_mult>      <fator>      <rep_termo>    |    î  ; 
+<termo> ::=  <fator>   #153   <rep_termo>     ; 
 
-<op_mult> ::= "*"       | "/"        | e     ; 
+<rep_termo> ::=  <op_mult>   #154   <fator>   #155   <rep_termo>    |    î  ; 
 
-<fator> ::=    nao     <fator>      |   "-"     <fator>     |   "("    <expressao>     ")"	
-           |    <variavel>     |   <constante_explicita> ; 
+<op_mult> ::=   "*"  #156  |  "/"  #157  |  e  #158  ; 
 
-<variavel> ::= id      <rvar>   ;  
+<fator> ::=  nao  #159    <fator>  #160
+                 |    "-"  #161  <fator>   #162
+                 |    "("  #163  <expressao>     ")"  #164
+                 |    <variavel>   #165    |   <constante_explicita>  #166 ; 
+
+<variavel> ::=  id #126     <rvar>   ;  
                             
-<rvar> ::=  "("   <expressao>    <rep_expressao>     ")"     
-         |  "["    <expressao>      "]"    |   î ; 
+<rvar> ::=  "(" #167   <expressao>  #135    <rep_expressao>     ")"  #168   
+                 |  "["  #132   <expressao>  #169     "]"    |   î  #170    ; 
 
-<constante_explicita> ::= num_int     | num_real     | falso    | verdadeiro    | literal     ;
+<constante_explicita> ::= num_int   #171    | num_real   #172    | falso #173     
+                                         | verdadeiro #174     | literal  #175     ; 
 
