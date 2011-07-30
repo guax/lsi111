@@ -34,9 +34,7 @@ public class CompiladorFacade {
         do {
             tk = lexico.nextToken();
             if (tk != null) {
-                if (tk.getId() == Lexico.t_programa
-                        || tk.getId() == Lexico.t_proc
-                        || tk.getId() == Lexico.t_funcao) {
+                if (tk.getId() == Lexico.t_proc || tk.getId() == Lexico.t_funcao) {
                     int start = tk.getPosition();
                     int end = Utilities.getParagraphElement(sourceText, start).getEndOffset();
                     hilite.addHighlight(tk.getPosition(), end,

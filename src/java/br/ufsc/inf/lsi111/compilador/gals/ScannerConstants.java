@@ -1882,20 +1882,20 @@ public interface ScannerConstants
         {255, 25}
     };
 
-    int[] TOKEN_STATE = { 0,  0, 26, -1,  8,  9, 14, 12,  3, 13,  4, 15, 24, 16,  2,  6,  7,  5, -1, 22, 10, 11, 25, 18, 23, -1, 23, -1, 17, 20, 19, 21, -1, -1, -1, -1, -1, -1, -1, -1, -1, 27, 24, 23, -1, 27 };
+    int[] TOKEN_STATE = { 0,  0,  0, -1,  8,  9, 14, 12,  3, 13,  4, 15, 24, 16,  2,  6,  7,  5, -1, 22, 10, 11, 25, 18, 23, -1, 23, -1, 17, 20, 19, 21, -1, -1, -1, -1, -1, -1, -1, -1, -1,  0, 24, 23, -1,  0 };
 
     int[] SPECIAL_CASES_INDEXES =
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31 };
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 };
 
     String[] SPECIAL_CASES_KEYS =
-        {  "ate", "booleano", "cadeia", "caracter", "const", "de", "e", "enquanto", "entao", "escreva", "faca", "falso", "fim", "funcao", "inicio", "inteiro", "intervalo", "leia", "nao", "ou", "proc", "programa", "real", "ref", "repita", "se", "senao", "val", "var", "verdadeiro", "vetor" };
+        {  "ate", "booleano", "cadeia", "caracter", "const", "de", "e", "enquanto", "entao", "escreva", "faca", "falso", "fim", "funcao", "inicio", "inteiro", "intervalo", "leia", "nao", "ou", "proc", "real", "ref", "repita", "se", "senao", "val", "var", "verdadeiro", "vetor" };
 
     int[] SPECIAL_CASES_VALUES =
-        {  34, 30, 31, 32, 58, 50, 46, 54, 41, 44, 51, 48, 37, 39, 36, 38, 57, 43, 47, 45, 35, 28, 52, 55, 33, 40, 42, 56, 29, 49, 53 };
+        {  31, 27, 28, 29, 55, 47, 43, 51, 38, 41, 48, 45, 34, 36, 33, 35, 54, 40, 44, 42, 32, 49, 52, 30, 37, 39, 53, 26, 46, 50 };
 
     String[] SCANNER_ERROR =
     {
-        "Caractere nao esperado",
+        "Caractere não esperado",
         "",
         "",
         "Erro identificando literal",
@@ -1920,7 +1920,7 @@ public interface ScannerConstants
         "",
         "",
         "",
-        "Erro identificando comentbloco",
+        "Erro identificando comentario de bloco",
         "",
         "Erro identificando num_int",
         "",
@@ -1930,16 +1930,16 @@ public interface ScannerConstants
         "Erro identificando id",
         "Erro identificando id",
         "Erro identificando num_real",
-        "Erro identificando comentbloco",
+        "Erro identificando comentario de bloco",
         "Erro identificando num_int",
         "Erro identificando num_int",
         "Erro identificando num_real",
         "Erro identificando num_real",
-        "Erro identificando comentbloco",
+        "Erro identificando comentario de bloco",
         "",
         "",
         "",
-        "Erro identificando comentbloco",
+        "Erro identificando comentario de bloco",
         ""
     };
 
