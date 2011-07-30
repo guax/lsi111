@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 public class Semantico implements Constants {
 
     public void executeAction(int action, Token token) throws SemanticError {
-        System.out.printf("Acao #%d, Token: %s", action, token);
+        System.out.printf("Acao #%d, Token: %s\n", action, token);
         try {
             this.getClass().getMethod("action" + action, Token.class).invoke(this, token);
         } catch (InvocationTargetException e) {
@@ -21,7 +21,8 @@ public class Semantico implements Constants {
             }
             throw semanticError;
         } catch (Exception e) {
-            throw new SemanticError("Acao semantica #" + action + " nao implementada");
+            System.err.printf("Warning: Acao semantica #%d nao implementada\n", action);
+            //throw new SemanticError("Acao semantica #" + action + " nao implementada");
         }
     }
 }
