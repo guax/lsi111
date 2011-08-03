@@ -104,13 +104,12 @@ public class CompiladorMainView extends javax.swing.JFrame {
         jMenu2 = new javax.swing.JMenu();
         SyntheticAnalysisMenu = new javax.swing.JMenuItem();
         LexicalAnalysisMenu = new javax.swing.JMenuItem();
-        jMenuItem1 = new javax.swing.JMenuItem();
         jMenu3 = new javax.swing.JMenu();
         jMenuItem5 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("C�digo Fonte"));
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Código Fonte"));
 
         sourceText.setColumns(20);
         sourceText.setFont(new java.awt.Font("Monospaced", 0, 13));
@@ -197,7 +196,7 @@ public class CompiladorMainView extends javax.swing.JFrame {
         LexicalAnalysisMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(
                 java.awt.event.KeyEvent.VK_X,
                 java.awt.event.InputEvent.CTRL_MASK));
-        LexicalAnalysisMenu.setText("L�xico");
+        LexicalAnalysisMenu.setText("Léxico");
         LexicalAnalysisMenu.addActionListener(new java.awt.event.ActionListener() {
 
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -206,9 +205,9 @@ public class CompiladorMainView extends javax.swing.JFrame {
         });
         jMenu2.add(LexicalAnalysisMenu);
 
-        SyntheticAnalysisMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S,
+        SyntheticAnalysisMenu.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_ENTER,
                 java.awt.event.InputEvent.CTRL_MASK));
-        SyntheticAnalysisMenu.setText("Sint�tico");
+        SyntheticAnalysisMenu.setText("Sintático/Semântico");
         SyntheticAnalysisMenu.addActionListener(new java.awt.event.ActionListener() {
 
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -216,9 +215,6 @@ public class CompiladorMainView extends javax.swing.JFrame {
             }
         });
         jMenu2.add(SyntheticAnalysisMenu);
-
-        jMenuItem1.setText("Sem�ntico");
-        jMenu2.add(jMenuItem1);
 
         jMenuBar1.add(jMenu2);
 
@@ -279,6 +275,7 @@ public class CompiladorMainView extends javax.swing.JFrame {
     private void syntheticAnalysisMenuActionPerformed(
             java.awt.event.ActionEvent evt) {
         if (!sourceText.getText().isEmpty()) {
+            System.out.println("Inicio da analise Sintatica/Semantica.");
             outputText.setText("");
             try {
                 String retorno = model.executaAnalisadorSintatico(sourceText.getText());
@@ -288,6 +285,8 @@ public class CompiladorMainView extends javax.swing.JFrame {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            System.out.println("Fim da analise Sintatica/Semantica.");
+            System.out.println();
         } else {
             outputText.setText("Programa fonte vazio!");
         }
@@ -387,11 +386,14 @@ public class CompiladorMainView extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
-
+            @Override
             public void run() {
                 System.setProperty("apple.laf.useScreenMenuBar", "true");
 
-                new CompiladorMainView().setVisible(true);
+                CompiladorMainView window = new CompiladorMainView();
+                window.setTitle("LSI-111 Compiler");
+                window.setVisible(true);
+
             }
         });
     }
@@ -403,7 +405,6 @@ public class CompiladorMainView extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
