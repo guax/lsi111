@@ -1,5 +1,7 @@
 package br.ufsc.inf.lsi111.compilador.gals;
 
+import br.ufsc.inf.lsi111.compilador.TabelaDeSimbolos;
+import br.ufsc.inf.lsi111.compilador.semantico.VariaveisDoContexto;
 import java.lang.reflect.InvocationTargetException;
 
 public class Semantico implements Constants {
@@ -14,8 +16,7 @@ public class Semantico implements Constants {
             if (targetException instanceof SemanticError) {
                 SemanticError s = (SemanticError) targetException;
                 semanticError = new SemanticError(String.format("#%d - %s", action, s.getMessage()), token.getPosition());
-            }
-            else {
+            } else {
                 semanticError = new SemanticError(
                         "Erro desconhecido ao executar acao semantica #" + action + ": " + targetException);
             }
@@ -24,5 +25,14 @@ public class Semantico implements Constants {
             System.err.printf("Warning: Acao semantica #%d nao implementada\n", action);
             //throw new SemanticError("Acao semantica #" + action + " nao implementada");
         }
+    }
+    
+    TabelaDeSimbolos tabelaDeSimbolos;
+    VariaveisDoContexto variaveisDoContexto;
+
+    public void action100(Token token) {
+        // Instancia tabela de simbolos vazia, com nivel e deslocamento zerados
+        tabelaDeSimbolos = new TabelaDeSimbolos();
+        variaveisDoContexto = new VariaveisDoContexto();
     }
 }
