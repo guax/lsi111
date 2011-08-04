@@ -220,6 +220,67 @@ public class Semantico implements Constants {
     }
 
     /**
+     * <tipo> ::= intervalo <constante> #117 ".." <constante> #118;
+     *
+     * #117  – Se tipo da constante é válido para intervalo
+     * Então Guarda tipo e valor do Limite Inferior
+     * Senão ERRO (“Const deveria ser int ou char”)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action117(Token token) throws SemanticError {
+        Constante constanteDoContexto = variaveisDoContexto.getTipoConstante();
+
+        if (!constanteDoContexto.getTipo().getCategoria().isInteger()
+                && !constanteDoContexto.getTipo().getCategoria().isChar()) {
+            throw new SemanticError(
+                    "Esperava-se uma constante inteira ou caracter e nao "
+                    + constanteDoContexto.getTipo().getCategoria());
+        }
+        
+        variaveisDoContexto.setLimiteInferior(constanteDoContexto);
+    }
+
+    /**
+     * <tipo> ::= intervalo <constante> #117 ".." <constante> #118;
+     *
+     * #118  – Se intervalo é válido
+     * Então TipoAtual := “intervalo”
+     * Senão ERRO (“Intervalo inválido”)
+     *
+     * @param token
+     * @throws Exception
+     * @throws SemanticError
+     */
+    public void action118(Token token) throws SemanticError, Exception {
+        Constante constanteDoContexto = variaveisDoContexto.getTipoConstante();
+
+        Constante limiteInferior = variaveisDoContexto.getLimiteInferior();
+
+        if (!constanteDoContexto.getTipo().getCategoria().equals(
+                limiteInferior.getTipo().getCategoria())) {
+            throw new SemanticError(
+                    "Constantes do intervalo devem ser do mesmo tipo.");
+        }
+
+        if (constanteDoContexto.getTipo().getCategoria().isInteger()) {
+            if (constanteDoContexto.getValorInteiro() <= limiteInferior.getValorInteiro()) {
+                throw new SemanticError(
+                        "Limite superior deve ser > que limite inferior.");
+            }
+        }
+        if (constanteDoContexto.getTipo().getCategoria().isChar()) {
+            if (constanteDoContexto.getValorChar() <= limiteInferior.getValorChar()) {
+                throw new SemanticError(
+                        "Limite superior deve ser > que limite inferior.");
+            }
+        }
+
+        variaveisDoContexto.setLimiteSuperior(constanteDoContexto);
+    }
+
+    /**
      * <tipo> ::= cadeia "[" <constante> #119 "]";
      *
      * #119 – Se TipoConst <> “inteiro”
@@ -243,7 +304,7 @@ public class Semantico implements Constants {
             throw new SemanticError("Cadeia declarada com tamanho maior que o permitido ["
                     + Cadeia.TAMANHO_MAXIMO + "]");
         }
-        
+
         Cadeia literal = new Cadeia(constanteDoContexto.getValorInteiro());
         variaveisDoContexto.setTipoAtual(literal);
     }
