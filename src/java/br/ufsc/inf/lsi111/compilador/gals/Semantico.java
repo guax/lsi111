@@ -1,17 +1,20 @@
 package br.ufsc.inf.lsi111.compilador.gals;
 
 import br.ufsc.inf.lsi111.compilador.TabelaDeSimbolos;
+import br.ufsc.inf.lsi111.compilador.semantico.ContextoLID;
 import br.ufsc.inf.lsi111.compilador.semantico.VariaveisDoContexto;
 import br.ufsc.inf.lsi111.compilador.semantico.id.Constante;
 import br.ufsc.inf.lsi111.compilador.semantico.id.Identificador;
+import br.ufsc.inf.lsi111.compilador.semantico.id.Variavel;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.Cadeia;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.PreDefinido;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.Tipo;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.constants.CategoriaTipoSimples;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 public class Semantico implements Constants {
-    
+
     TabelaDeSimbolos tabelaDeSimbolos;
 
     public void executeAction(int action, Token token) throws SemanticError {
@@ -105,9 +108,87 @@ public class Semantico implements Constants {
             // Seta na constante da tabela de simbolos o valor e tipo declarados.
             simboloConstante.setTipo(constanteDoContexto.getTipo());
             simboloConstante.setValor(constanteDoContexto.getValor());
-        }
-        else {
+        } else {
             throw new SemanticError("Tipo de constante invalido.");
+        }
+    }
+
+    /**
+     * <dcl_var> ::= var #103 <lid> #104 ":" <tipo> #105 ";" <dcl_var> | î ;
+     *
+     * #103 – contextoLID := “decl” salva pos.na TS do primeiro id da lista.
+     *
+     * @param token
+     */
+    public void action103(Token token) {
+        variaveisDoContexto.setContextoLID(ContextoLID.DECLARACAO);
+        variaveisDoContexto.setPosInicial(tabelaDeSimbolos.getDeslocamento());
+    }
+
+    /**
+     * <dcl_var> ::= var #103 <lid> #104 ":" <tipo> #105 ";" <dcl_var> | î ;
+     *
+     * #104 – salva pos.na TS do último id da lista.
+     *
+     * @param token
+     */
+    public void action104(Token token) {
+        variaveisDoContexto.setPosFinal(tabelaDeSimbolos.getDeslocamento());
+    }
+
+    /**
+     * <dcl_var> ::= var #103 <lid> #104 ":" <tipo> #105 ";" <dcl_var> | î ;
+     *
+     * #105 - Preenche atributos na TS dos id’s da lista, considerando categoria
+     * “variável” e TipoAtual
+     *
+     * @param token
+     */
+    public void action105(Token token) {
+        // Recupera a posicao (deslocamento no nivel) do primeiro id da lista de
+        // identificadores de variaveis ou parametros
+        int posInicial = variaveisDoContexto.getPosInicial();
+        // Recupera a posicao (deslocamento no nivel) do ultimo id da lista de
+        // identificadores de variaveis ou parametros
+        int posFinal = variaveisDoContexto.getPosFinal();
+
+        List<Variavel> listaVar = tabelaDeSimbolos.getVariaveisDaPosicao(
+                posInicial, posFinal);
+
+        for (Variavel var : listaVar) {
+            var.setTipo(variaveisDoContexto.getTipoAtual());
+        }
+    }
+
+    /**
+     * <lid>    ::= id #115 <rep_id>;
+     * <rep_id> ::= "," id #115 <rep_id> | î ;
+     *
+     * #115 – Trata “id” de acordo com contextoLID (decl, par-formal ou leitura)
+     *
+     * @TODO tratamento de par-forma e leitura.
+     *
+     * @param token
+     */
+    public void action115(Token token) throws SemanticError {
+        String lexeme = token.getLexeme();
+
+        switch (variaveisDoContexto.getContextoLID()) {
+            case DECLARACAO: {
+                Identificador simbolo = tabelaDeSimbolos.getSimboloDoNivel(lexeme);
+
+                if (simbolo != null) {
+                    throw new SemanticError("Identificador '" + lexeme
+                            + "' ja foi declarado.");
+                } else {
+                    Variavel variavel = new Variavel(lexeme);
+                    variavel.setNivel(tabelaDeSimbolos.getNivel());
+                    variavel.setDeslocamento(tabelaDeSimbolos.getDeslocamento());
+                    tabelaDeSimbolos.addSimbolo(variavel);
+                    tabelaDeSimbolos.incrementaDeslocamento();
+                }
+                break;
+            }
         }
     }
 
@@ -126,13 +207,11 @@ public class Semantico implements Constants {
         String lexeme = token.getLexeme();
         Identificador id = tabelaDeSimbolos.getSimbolo(lexeme);
 
-        if(id == null) {
+        if (id == null) {
             throw new SemanticError("Id '" + lexeme + "' não declarado.");
-        }
-        else if(!(id instanceof Constante)) {
+        } else if (!(id instanceof Constante)) {
             throw new SemanticError("'" + lexeme + "' deve ser uma constante.");
-        }
-        else {
+        } else {
             Constante constante = (Constante) id;
             // Ignorando tipo declarado e usando tipo da constante do id.
             this.variaveisDoContexto.setTipoAtual(constante.getTipo());
@@ -278,8 +357,7 @@ public class Semantico implements Constants {
         if (valor.length() > 1) { // Literal (cadeia de char)
             Cadeia literal = new Cadeia(valor.length());
             definirConstanteDoContexto(literal, valor);
-        }
-        else { // Char
+        } else { // Char
             definirConstanteDoContexto(new PreDefinido(CategoriaTipoSimples.CHAR), valor);
         }
     }
