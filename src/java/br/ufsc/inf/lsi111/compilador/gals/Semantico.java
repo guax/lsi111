@@ -247,19 +247,15 @@ public class Semantico implements Constants {
      * @param token
      */
     public void action175(Token token) {
-        String valor = token.getLexeme();
-        // Remove as aspas (Ex: 'teste' = teste)
-        valor = valor.replaceAll("'(.*?)'", "$1");
+        // Pega lexeme removendo aspas
+        String valor = token.getLexeme().replaceAll("'(.*?)'", "$1");
 
-        // Caso o tamanho > 1, e um literal
-        if (valor.length() > 1) {
+        if (valor.length() > 1) { // Literal (cadeia de char)
             Cadeia literal = new Cadeia(valor.length());
             definirConstanteDoContexto(literal, valor);
-            return;
         }
-
-        // Se o tamanho <=1, e char
-        definirConstanteDoContexto(new PreDefinido(CategoriaTipoSimples.CHAR),
-                valor);
+        else { // Char
+            definirConstanteDoContexto(new PreDefinido(CategoriaTipoSimples.CHAR), valor);
+        }
     }
 }

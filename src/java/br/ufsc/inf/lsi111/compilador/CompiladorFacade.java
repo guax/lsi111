@@ -54,6 +54,6 @@ public class CompiladorFacade {
         Semantico semantic = new Semantico();
         // Executa análise
         syntactic.parse(lexico, semantic);
-        return "O programa fonte está sintaticamente correto.";
+        return "O programa fonte está sintatica e semanticamente correto.";
     }
 }
