@@ -42,6 +42,8 @@ public class Semantico implements Constants {
     VariaveisDoContexto variaveisDoContexto;
 
     /**
+     * <programa> ::=   #100  <declaracoes>  <comandos>  "." ; 
+     *
      * #100 Efetua INICIALIZAÇÃO das variáveis de contexto:
      * NA (Nível Atual):= 0; DESLOC (deslocamento):=0;
      *
@@ -53,6 +55,8 @@ public class Semantico implements Constants {
     }
 
     /**
+     * <dcl_const> ::= const <tipo_pre_def> id #101 "=" <constante> #102 ";" <dcl_const> | î;
+     *
      * #101  – Se id já está declarado no NA então ERRO(“Id já declarado”) senão
      * insere id na TS, junto com seus atributos (categoria = constante e
      * nível = NA)
@@ -77,6 +81,8 @@ public class Semantico implements Constants {
     }
 
     /**
+     * <dcl_const> ::= const <tipo_pre_def> id #101 "=" <constante> #102 ";" <dcl_const> | î;
+     *
      * #102 – se Tipo-Const = TipoAtual então Insere atrib. Tipo-Const e
      * Val-Const na TS senão ERRO (“Tipo de constante inválido”)
      *
@@ -132,11 +138,11 @@ public class Semantico implements Constants {
             this.variaveisDoContexto.setTipoAtual(constante.getTipo());
             this.definirConstanteDoContexto(constante.getTipo(), (String) constante.getValor());
         }
-        
-        
     }
 
     /**
+     * <tipo_pre_def> ::= inteiro #122 | real #123 | booleano #124 | caracter #125;
+     *
      * #122 – TipoAtual := “inteiro”
      *
      * @param token
@@ -146,6 +152,8 @@ public class Semantico implements Constants {
     }
 
     /**
+     * <tipo_pre_def> ::= inteiro #122 | real #123 | booleano #124 | caracter #125;
+     *
      * #123 – TipoAtual := “real”
      *
      * @param token
@@ -155,6 +163,8 @@ public class Semantico implements Constants {
     }
 
     /**
+     * <tipo_pre_def> ::= inteiro #122 | real #123 | booleano #124 | caracter #125;
+     *
      * #124 – TipoAtual := “booleano”
      *
      * @param token
@@ -164,6 +174,8 @@ public class Semantico implements Constants {
     }
 
     /**
+     * <tipo_pre_def> ::= inteiro #122 | real #123 | booleano #124 | caracter #125;
+     *
      * #125 – TipoAtual := “caracter”
      * 
      * @param token
@@ -187,6 +199,9 @@ public class Semantico implements Constants {
     }
 
     /**
+     * <constante_explicita> ::= num_int #171 | num_real #172 | falso #173
+     *                         | verdadeiro #174 | literal #175;
+     *
      * ACAO #171
      *
      * Define na constante de contexto o seu tipo como inteiro e o valor
@@ -200,6 +215,9 @@ public class Semantico implements Constants {
     }
 
     /**
+     * <constante_explicita> ::= num_int #171 | num_real #172 | falso #173
+     *                         | verdadeiro #174 | literal #175;
+     *
      * ACAO #172
      *
      * Define na constante de contexto o seu tipo como real e o valor
@@ -209,11 +227,13 @@ public class Semantico implements Constants {
     public void action172(Token token) {
         // No lexeme vem o valor da constante
         String valor = token.getLexeme();
-        definirConstanteDoContexto(new PreDefinido(CategoriaTipoSimples.REAL),
-                valor);
+        definirConstanteDoContexto(new PreDefinido(CategoriaTipoSimples.REAL), valor);
     }
 
     /**
+     * <constante_explicita> ::= num_int #171 | num_real #172 | falso #173
+     *                         | verdadeiro #174 | literal #175;
+     *
      * ACAO #173
      *
      * Define na constante de contexto o seu tipo como boolean e o valor
@@ -223,11 +243,13 @@ public class Semantico implements Constants {
     public void action173(Token token) {
         // No lexeme vem o valor da constante
         String valor = token.getLexeme();
-        definirConstanteDoContexto(
-                new PreDefinido(CategoriaTipoSimples.BOOLEAN), valor);
+        definirConstanteDoContexto(new PreDefinido(CategoriaTipoSimples.BOOLEAN), valor);
     }
 
     /**
+     * <constante_explicita> ::= num_int #171 | num_real #172 | falso #173
+     *                         | verdadeiro #174 | literal #175;
+     *
      * ACAO #174
      *
      * Define na constante de contexto o seu tipo como boolean e o valor.
@@ -239,6 +261,9 @@ public class Semantico implements Constants {
     }
 
     /**
+     * <constante_explicita> ::= num_int #171 | num_real #172 | falso #173
+     *                         | verdadeiro #174 | literal #175;
+     * 
      * ACAO #175
      *
      * Define na constante de contexto o seu valor e tipo como literal caso
