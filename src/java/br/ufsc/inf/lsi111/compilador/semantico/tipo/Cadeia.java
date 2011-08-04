@@ -5,7 +5,7 @@ import br.ufsc.inf.lsi111.compilador.semantico.tipo.constants.CategoriaTipoSimpl
 
 public class Cadeia extends Tipo {
 
-	public static final int TAMANHO_MAXIMO = 256;
+	public static final int TAMANHO_MAXIMO = 255;
 
 	private int tamanho;
 

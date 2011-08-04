@@ -58,7 +58,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <dcl_const> ::= const <tipo_pre_def> id #101 "=" <constante> #102 ";" <dcl_const> | î;
+     * <dcl_const> ::= const <tipo_pre_def> id #101 "=" <constante> #102 ";" <dcl_const>;
      *
      * #101  – Se id já está declarado no NA então ERRO(“Id já declarado”) senão
      * insere id na TS, junto com seus atributos (categoria = constante e
@@ -84,7 +84,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <dcl_const> ::= const <tipo_pre_def> id #101 "=" <constante> #102 ";" <dcl_const> | î;
+     * <dcl_const> ::= const <tipo_pre_def> id #101 "=" <constante> #102 ";" <dcl_const>;
      *
      * #102 – se Tipo-Const = TipoAtual então Insere atrib. Tipo-Const e
      * Val-Const na TS senão ERRO (“Tipo de constante inválido”)
@@ -114,7 +114,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <dcl_var> ::= var #103 <lid> #104 ":" <tipo> #105 ";" <dcl_var> | î ;
+     * <dcl_var> ::= var #103 <lid> #104 ":" <tipo> #105 ";" <dcl_var>;
      *
      * #103 – contextoLID := “decl” salva pos.na TS do primeiro id da lista.
      *
@@ -126,7 +126,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <dcl_var> ::= var #103 <lid> #104 ":" <tipo> #105 ";" <dcl_var> | î ;
+     * <dcl_var> ::= var #103 <lid> #104 ":" <tipo> #105 ";" <dcl_var>;
      *
      * #104 – salva pos.na TS do último id da lista.
      *
@@ -137,7 +137,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <dcl_var> ::= var #103 <lid> #104 ":" <tipo> #105 ";" <dcl_var> | î ;
+     * <dcl_var> ::= var #103 <lid> #104 ":" <tipo> #105 ";" <dcl_var>;
      *
      * #105 - Preenche atributos na TS dos id’s da lista, considerando categoria
      * “variável” e TipoAtual
@@ -162,7 +162,7 @@ public class Semantico implements Constants {
 
     /**
      * <lid>    ::= id #115 <rep_id>;
-     * <rep_id> ::= "," id #115 <rep_id> | î ;
+     * <rep_id> ::= "," id #115 <rep_id>;
      *
      * #115 – Trata “id” de acordo com contextoLID (decl, par-formal ou leitura)
      *
@@ -193,7 +193,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <constante> ::= id  #116 | <constante_explicita>;
+     * <constante> ::= id  #116;
      *
      * #116- Se id não está declarado então ERRO(“Id não declarado”) senão se
      * categoria de id <> constante entao ERRO (“Esperava-se um id de
@@ -220,7 +220,36 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <tipo_pre_def> ::= inteiro #122 | real #123 | booleano #124 | caracter #125;
+     * <tipo> ::= cadeia "[" <constante> #119 "]";
+     *
+     * #119 – Se TipoConst <> “inteiro”
+     *     então ERRO(“esperava-se uma constante inteira”)
+     * senão se ValConst > 255
+     *     então ERRO(“tam.da cadeia > que o permitido”)
+     * senão TipoAtual := “cadeia”
+     *
+     * @param token
+     * @throws SemanticError
+     * @throws Exception
+     */
+    public void action119(Token token) throws SemanticError, Exception {
+        Constante constanteDoContexto = variaveisDoContexto.getTipoConstante();
+
+        if (!constanteDoContexto.getTipo().getCategoria().isInteger()) {
+            throw new SemanticError("Esperava-se uma constante inteira.");
+        }
+
+        if (constanteDoContexto.getValorInteiro() > Cadeia.TAMANHO_MAXIMO) {
+            throw new SemanticError("Cadeia declarada com tamanho maior que o permitido ["
+                    + Cadeia.TAMANHO_MAXIMO + "]");
+        }
+        
+        Cadeia literal = new Cadeia(constanteDoContexto.getValorInteiro());
+        variaveisDoContexto.setTipoAtual(literal);
+    }
+
+    /**
+     * <tipo_pre_def> ::= inteiro #122;
      *
      * #122 – TipoAtual := “inteiro”
      *
@@ -231,7 +260,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <tipo_pre_def> ::= inteiro #122 | real #123 | booleano #124 | caracter #125;
+     * <tipo_pre_def> ::= real #123;
      *
      * #123 – TipoAtual := “real”
      *
@@ -242,7 +271,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <tipo_pre_def> ::= inteiro #122 | real #123 | booleano #124 | caracter #125;
+     * <tipo_pre_def> ::= booleano #124;
      *
      * #124 – TipoAtual := “booleano”
      *
@@ -253,7 +282,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <tipo_pre_def> ::= inteiro #122 | real #123 | booleano #124 | caracter #125;
+     * <tipo_pre_def> ::= caracter #125;
      *
      * #125 – TipoAtual := “caracter”
      * 
@@ -278,8 +307,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <constante_explicita> ::= num_int #171 | num_real #172 | falso #173
-     *                         | verdadeiro #174 | literal #175;
+     * <constante_explicita> ::= num_int #171;
      *
      * ACAO #171
      *
@@ -294,8 +322,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <constante_explicita> ::= num_int #171 | num_real #172 | falso #173
-     *                         | verdadeiro #174 | literal #175;
+     * <constante_explicita> ::= num_real #172;
      *
      * ACAO #172
      *
@@ -310,8 +337,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <constante_explicita> ::= num_int #171 | num_real #172 | falso #173
-     *                         | verdadeiro #174 | literal #175;
+     * <constante_explicita> ::= falso #173;
      *
      * ACAO #173
      *
@@ -326,8 +352,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <constante_explicita> ::= num_int #171 | num_real #172 | falso #173
-     *                         | verdadeiro #174 | literal #175;
+     * <constante_explicita> ::= verdadeiro #174;
      *
      * ACAO #174
      *
@@ -340,8 +365,7 @@ public class Semantico implements Constants {
     }
 
     /**
-     * <constante_explicita> ::= num_int #171 | num_real #172 | falso #173
-     *                         | verdadeiro #174 | literal #175;
+     * <constante_explicita> ::= literal #175;
      * 
      * ACAO #175
      *
