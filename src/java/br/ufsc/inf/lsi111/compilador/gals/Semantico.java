@@ -11,12 +11,8 @@ import br.ufsc.inf.lsi111.compilador.semantico.tipo.constants.CategoriaTipoSimpl
 import java.lang.reflect.InvocationTargetException;
 
 public class Semantico implements Constants {
-
+    
     TabelaDeSimbolos tabelaDeSimbolos;
-
-    public Semantico() {
-        tabelaDeSimbolos = new TabelaDeSimbolos();
-    }
 
     public void executeAction(int action, Token token) throws SemanticError {
         //System.out.printf("Acao #%d, Token: %s\n", action, token); msg chata.
@@ -53,6 +49,7 @@ public class Semantico implements Constants {
      */
     public void action100(Token token) {
         variaveisDoContexto = new VariaveisDoContexto();
+        tabelaDeSimbolos = new TabelaDeSimbolos();
     }
 
     /**
@@ -93,8 +90,7 @@ public class Semantico implements Constants {
 
         // Recupera a constante da tabela de simbolos atraves do nome do
         // identificador que estava na pilha.
-        Constante simboloConstante = (Constante) tabelaDeSimbolos
-                        .getSimboloDoNivel(nomeIdentificador);
+        Constante simboloConstante = (Constante) tabelaDeSimbolos.getSimboloDoNivel(nomeIdentificador);
 
         // Recupera a constante (contendo tipo e valor) que estava no contexto.
         Constante constanteDoContexto = variaveisDoContexto.getTipoConstante();
@@ -107,6 +103,37 @@ public class Semantico implements Constants {
         else {
             throw new SemanticError("Tipo de constante invalido.");
         }
+    }
+
+    /**
+     * <constante> ::= id  #116 | <constante_explicita>;
+     *
+     * #116- Se id não está declarado então ERRO(“Id não declarado”) senão se
+     * categoria de id <> constante entao ERRO (“Esperava-se um id de
+     * Constante”) senão TipoConst := Tipo do id-constante ValConst := Valor da
+     * constante id
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action116(Token token) throws SemanticError {
+        String lexeme = token.getLexeme();
+        Identificador id = tabelaDeSimbolos.getSimbolo(lexeme);
+
+        if(id == null) {
+            throw new SemanticError("Id '" + lexeme + "' não declarado.");
+        }
+        else if(!(id instanceof Constante)) {
+            throw new SemanticError("'" + lexeme + "' deve ser uma constante.");
+        }
+        else {
+            Constante constante = (Constante) id;
+            // Ignorando tipo declarado e usando tipo da constante do id.
+            this.variaveisDoContexto.setTipoAtual(constante.getTipo());
+            this.definirConstanteDoContexto(constante.getTipo(), (String) constante.getValor());
+        }
+        
+        
     }
 
     /**

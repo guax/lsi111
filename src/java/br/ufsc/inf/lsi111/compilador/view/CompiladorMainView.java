@@ -211,7 +211,7 @@ public class CompiladorMainView extends javax.swing.JFrame {
         SyntheticAnalysisMenu.addActionListener(new java.awt.event.ActionListener() {
 
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                syntheticAnalysisMenuActionPerformed(evt);
+                syntacticAnalysisMenuActionPerformed(evt);
             }
         });
         jMenu2.add(SyntheticAnalysisMenu);
@@ -272,8 +272,7 @@ public class CompiladorMainView extends javax.swing.JFrame {
         }
     }
 
-    private void syntheticAnalysisMenuActionPerformed(
-            java.awt.event.ActionEvent evt) {
+    private void syntacticAnalysisMenuActionPerformed(java.awt.event.ActionEvent evt) {
         if (!sourceText.getText().isEmpty()) {
             System.out.println("Inicio da analise Sintatica/Semantica.");
             outputText.setText("");
