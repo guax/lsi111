@@ -7,6 +7,7 @@ import br.ufsc.inf.lsi111.compilador.semantico.id.Constante;
 import br.ufsc.inf.lsi111.compilador.semantico.id.Identificador;
 import br.ufsc.inf.lsi111.compilador.semantico.id.Variavel;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.Cadeia;
+import br.ufsc.inf.lsi111.compilador.semantico.tipo.Intervalo;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.PreDefinido;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.Tipo;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.constants.CategoriaTipoSimples;
@@ -277,7 +278,10 @@ public class Semantico implements Constants {
             }
         }
 
-        variaveisDoContexto.setLimiteSuperior(constanteDoContexto);
+        Intervalo intervalo = new Intervalo();
+        intervalo.setLimiteInferior(limiteInferior);
+        intervalo.setLimiteSuperior(constanteDoContexto);
+        variaveisDoContexto.setTipoAtual(intervalo);
     }
 
     /**

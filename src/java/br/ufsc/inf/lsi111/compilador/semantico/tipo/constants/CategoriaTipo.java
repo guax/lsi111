@@ -12,6 +12,8 @@ public interface CategoriaTipo {
 
 	public boolean isCadeia();
 
+        public boolean isIntervalo();
+
 	public boolean isVetor();
 
 	public boolean isNumerico();

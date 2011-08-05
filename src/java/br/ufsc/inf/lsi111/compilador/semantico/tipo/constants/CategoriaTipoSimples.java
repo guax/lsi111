@@ -5,8 +5,8 @@ public enum CategoriaTipoSimples implements CategoriaTipo {
 	// Tipo simples pré-definido:
 	INTEGER, REAL, CHAR, BOOLEAN,
 
-	// Tipo simples definido pelo usu�rio:
-	CADEIA;
+	// Tipo simples definido pelo usuário:
+	CADEIA, INTERVALO;
 
 	public boolean isInteger() {
 		return equals(INTEGER);
@@ -26,6 +26,10 @@ public enum CategoriaTipoSimples implements CategoriaTipo {
 
 	public boolean isCadeia() {
 		return equals(CADEIA);
+	}
+
+        public boolean isIntervalo() {
+		return equals(INTERVALO);
 	}
 
 	public boolean isVetor() {

@@ -251,12 +251,10 @@ public class VariaveisDoContexto {
 	}
 
 	/**
-	 * Armazena as informacoes sobre o limite inferior e superior de um vetor
-	 * antes de salva-lo como dimensao1 e dimensao2.
+	 * Armazena informação de limite inferior para uso de declaração de
+         * intervalo.
 	 */
 	private Constante limiteInferior;
-
-	private Constante limiteSuperior;
 
 	public Constante getLimiteInferior() {
 		return limiteInferior;
@@ -264,14 +262,6 @@ public class VariaveisDoContexto {
 
 	public void setLimiteInferior(Constante limiteInferior) {
 		this.limiteInferior = limiteInferior;
-	}
-
-	public Constante getLimiteSuperior() {
-		return limiteSuperior;
-	}
-
-	public void setLimiteSuperior(Constante limiteSuperior) {
-		this.limiteSuperior = limiteSuperior;
 	}
 
 	/**
