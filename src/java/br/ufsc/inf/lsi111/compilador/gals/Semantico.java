@@ -10,6 +10,7 @@ import br.ufsc.inf.lsi111.compilador.semantico.tipo.Cadeia;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.Intervalo;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.PreDefinido;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.Tipo;
+import br.ufsc.inf.lsi111.compilador.semantico.tipo.Vetor;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.constants.CategoriaTipoSimples;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -239,8 +240,8 @@ public class Semantico implements Constants {
                     "Esperava-se uma constante inteira ou caracter e nao "
                     + constanteDoContexto.getTipo().getCategoria());
         }
-        
-        variaveisDoContexto.setLimiteInferior(constanteDoContexto);
+
+        variaveisDoContexto.setLimite(constanteDoContexto);
     }
 
     /**
@@ -257,7 +258,7 @@ public class Semantico implements Constants {
     public void action118(Token token) throws SemanticError, Exception {
         Constante constanteDoContexto = variaveisDoContexto.getTipoConstante();
 
-        Constante limiteInferior = variaveisDoContexto.getLimiteInferior();
+        Constante limiteInferior = variaveisDoContexto.getLimite();
 
         if (!constanteDoContexto.getTipo().getCategoria().equals(
                 limiteInferior.getTipo().getCategoria())) {
@@ -311,6 +312,44 @@ public class Semantico implements Constants {
 
         Cadeia literal = new Cadeia(constanteDoContexto.getValorInteiro());
         variaveisDoContexto.setTipoAtual(literal);
+    }
+
+    /**
+     * <tipo> ::= vetor "[" <constante> #120 "]" de <tipo_pre_def> #121;
+     *
+     * #120 – Se TipoConst <> “inteiro”
+     * então ERRO(“Número de elementos deve ser int”)
+     * senão Tam-Vetor := Val-Const
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action120(Token token) throws SemanticError, Exception {
+        Constante constanteDoContexto = variaveisDoContexto.getTipoConstante();
+
+        if (!constanteDoContexto.getTipo().getCategoria().isInteger()) {
+            throw new SemanticError("Número de elementos deve ser inteiro.");
+        }
+
+        variaveisDoContexto.setLimite(constanteDoContexto);
+    }
+
+    /**
+     * <tipo> ::= vetor "[" <constante> #120 "]" de <tipo_pre_def> #121;
+     *
+     * #121 - TipoElementos  := TipoAtual
+     * TipoAtual := “vetor”
+     *
+     * @param token
+     */
+    public void action121(Token token) throws Exception {
+        PreDefinido tipo = (PreDefinido) variaveisDoContexto.getTipoAtual();
+
+        Vetor vetor = new Vetor();
+        vetor.setTipo(tipo);
+        vetor.setTamanho(variaveisDoContexto.getTipoConstante());
+
+        variaveisDoContexto.setTipoAtual(vetor);
     }
 
     /**
