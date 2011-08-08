@@ -26,6 +26,24 @@ public class VariaveisDoContexto {
     public void pushIdentificador(String identificador) {
         this.identificador.push(identificador);
     }
+
+    /**
+     * Armazena a pilha de identificadores declarados.
+     */
+    private Stack<String> funcaoEscopo = new Stack<String>();
+
+    public String popFuncaoEscopo() {
+        return funcaoEscopo.pop();
+    }
+
+    public String peekFuncaoEscopo() {
+        return funcaoEscopo.peek();
+    }
+
+    public void pushFuncaoEscopo(String identificador) {
+        this.funcaoEscopo.push(identificador);
+    }
+
     /**
      * Armazena a pilha de procedimentos declarados.
      */
@@ -308,14 +326,5 @@ public class VariaveisDoContexto {
 
     public void setOperadorRelacional(OperadorRelacional operadorRelacional) {
         this.operadorRelacional = operadorRelacional;
-    }
-    private boolean expressaoComposta;
-
-    public boolean isExpressaoComposta() {
-        return expressaoComposta;
-    }
-
-    public void setExpressaoComposta(boolean expressaoComposta) {
-        this.expressaoComposta = expressaoComposta;
     }
 }

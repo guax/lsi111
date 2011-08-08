@@ -1,10 +1,16 @@
 package br.ufsc.inf.lsi111.compilador.gals;
 
 import br.ufsc.inf.lsi111.compilador.TabelaDeSimbolos;
+import br.ufsc.inf.lsi111.compilador.semantico.ContextoEXPR;
 import br.ufsc.inf.lsi111.compilador.semantico.ContextoLID;
+import br.ufsc.inf.lsi111.compilador.semantico.OperadorRelacional;
 import br.ufsc.inf.lsi111.compilador.semantico.VariaveisDoContexto;
 import br.ufsc.inf.lsi111.compilador.semantico.id.Constante;
+import br.ufsc.inf.lsi111.compilador.semantico.id.Funcao;
 import br.ufsc.inf.lsi111.compilador.semantico.id.Identificador;
+import br.ufsc.inf.lsi111.compilador.semantico.id.MecanismoPassagem;
+import br.ufsc.inf.lsi111.compilador.semantico.id.Parametro;
+import br.ufsc.inf.lsi111.compilador.semantico.id.Procedimento;
 import br.ufsc.inf.lsi111.compilador.semantico.id.Variavel;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.Cadeia;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.Intervalo;
@@ -18,9 +24,10 @@ import java.util.List;
 public class Semantico implements Constants {
 
     TabelaDeSimbolos tabelaDeSimbolos;
+    VariaveisDoContexto variaveisDoContexto;
 
     public void executeAction(int action, Token token) throws SemanticError {
-        //System.out.printf("Acao #%d, Token: %s\n", action, token); msg chata.
+        //System.out.printf("Acao #%d, Token: %s\n", action, token); //msg chata.
         try {
             this.getClass().getMethod("action" + action, Token.class).invoke(this, token);
         } catch (InvocationTargetException e) {
@@ -39,12 +46,6 @@ public class Semantico implements Constants {
             //throw new SemanticError("Acao semantica #" + action + " nao implementada");
         }
     }
-
-    private void definirTipoPreDefinido(CategoriaTipoSimples categoriaTipo) {
-        PreDefinido tipo = new PreDefinido(categoriaTipo);
-        variaveisDoContexto.setTipoAtual(tipo);
-    }
-    VariaveisDoContexto variaveisDoContexto;
 
     /**
      * <programa> ::=   #100  <declaracoes>  <comandos>  "." ; 
@@ -163,6 +164,197 @@ public class Semantico implements Constants {
     }
 
     /**
+     * <dcl_proc> ::= proc id #106 <parametros> #107 ";" <declaracoes> <comandos> #108
+     *
+     * #106 – Se id do procedimento já está declarado no NA,
+     * então ERRO(“Id já declarado”)
+     * senão insere id na TS, junto com seus atributos
+     * zera número de parâmetros Formais (NPF)
+     * incrementa nível atual (NA := NA + 1)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action106(Token token) throws SemanticError {
+        Identificador simbolo = tabelaDeSimbolos.getSimboloDoNivel(token.getLexeme());
+
+        if (simbolo != null) {
+            throw new SemanticError("Identificador '" + token.getLexeme()
+                    + "' ja foi declarado como '" + simbolo.getCategoria()
+                    + "'.");
+        }
+
+        Procedimento procedimento = new Procedimento(token.getLexeme());
+        procedimento.setNivel(tabelaDeSimbolos.getNivel());
+        tabelaDeSimbolos.addSimbolo(procedimento);
+
+        tabelaDeSimbolos.incrementaNivel();
+
+        variaveisDoContexto.setPosInicial(0);
+        variaveisDoContexto.setPosFinal(0);
+
+        variaveisDoContexto.setContextoLID(ContextoLID.PAR_FORMAL);
+        variaveisDoContexto.pushProcedimento(procedimento);
+    }
+
+    /**
+     *<dcl_proc> ::= proc id #106 <parametros> #107 ";" <declaracoes> <comandos> #108
+     *
+     * #107 – Atualiza num. de par. Formais (NPF) na TS
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action107(Token token) {
+        // A classe procedimento ja armezena uma lista de parametros e assim o
+        // devido numero de parametros.
+    }
+
+    /**
+     * <dcl_proc> ::= proc  id #106 <parametros> #107 ";" <declaracoes> <comandos> #108;
+     * <dcl_proc> ::= funcao id #109 <parametros> #107 ":" <tipo_pre_def> #110 ";" <declaracoes> <comandos> #108;
+     *
+     * #108 – Retira da TS as variáveis declaradas localmenteAtualiza nível
+     * atual ( NA := NA – 1 )
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action108(Token token) throws SemanticError {
+        tabelaDeSimbolos.limpaNivelAtual();
+
+        tabelaDeSimbolos.decrementaNivel();
+        variaveisDoContexto.setPosInicial(0);
+        variaveisDoContexto.setPosFinal(0);
+
+        Procedimento procedimento = variaveisDoContexto.popProcedimento();
+
+        if (procedimento instanceof Funcao) {
+            Funcao funcao = (Funcao) procedimento;
+
+            if (!funcao.isUtilizouRetorno()) {
+                throw new SemanticError("Funcao '" + funcao.getNome()
+                        + "' possui tipo e deve retornar expressao do tipo "
+                        + funcao.getTipoRetorno().getCategoria());
+            }
+            variaveisDoContexto.popFuncaoEscopo();
+        }
+
+    }
+
+    /**
+     * <dcl_proc> ::= funcao id #109 <parametros> #107 ":" <tipo_pre_def> #110 ";" <declaracoes> <comandos> #108;
+     *
+     * #109 – idem a ação #106, para função.
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action109(Token token) throws SemanticError {
+        Identificador simbolo = tabelaDeSimbolos.getSimboloDoNivel(token.getLexeme());
+
+        if (simbolo != null) {
+            throw new SemanticError("Identificador '" + token.getLexeme()
+                    + "' ja foi declarado como '" + simbolo.getCategoria()
+                    + "'.");
+        }
+        Funcao funcao = new Funcao(token.getLexeme());
+        funcao.setNivel(tabelaDeSimbolos.getNivel());
+        tabelaDeSimbolos.addSimbolo(funcao);
+
+        tabelaDeSimbolos.incrementaNivel();
+
+        variaveisDoContexto.setPosInicial(0);
+        variaveisDoContexto.setPosFinal(0);
+
+        variaveisDoContexto.setContextoLID(ContextoLID.PAR_FORMAL);
+        variaveisDoContexto.pushProcedimento(funcao);
+
+        variaveisDoContexto.pushFuncaoEscopo(token.getLexeme());
+    }
+
+    /**
+     * <dcl_proc> ::= funcao id #109 <parametros> #107 ":" <tipo_pre_def> #110 ";" <declaracoes> <comandos> #108;
+     *
+     * #111 - contextoLID := “par-formal”
+     * MPP := “valor”
+     * salva pos.na TS do primeiro id da lista
+     *
+     * #110 – Atualiza tipo do resultado da função na TS
+     *
+     * @param token
+     */
+    public void action110(Token token) {
+        Funcao funcaoAtual = (Funcao) variaveisDoContexto.peekProcedimento();
+        funcaoAtual.setTipoRetorno(variaveisDoContexto.getTipoAtual());
+    }
+
+    /**
+     * <listapar> ::= ref #111 <lid> #112 ":" <tipo_pre_def> #113 <rep_listapar>;
+     *
+     * #111 - contextoLID := “par-formal”
+     * MPP := “referência”
+     * salva pos.na TS do primeiro id da lista
+     *
+     * @param token
+     */
+    public void action111(Token token) {
+        variaveisDoContexto.setMecanismoPassagem(MecanismoPassagem.REFERENCIA);
+        variaveisDoContexto.setContextoLID(ContextoLID.PAR_FORMAL);
+        variaveisDoContexto.setPosInicial(tabelaDeSimbolos.getDeslocamento());
+    }
+
+    /**
+     * <listapar> ::= ref #111 <lid> #112 ":" <tipo_pre_def> #113 <rep_listapar>;
+     * <listapar> ::= val #114 <lid> #112 ":" <tipo_pre_def> #113 <rep_listapar>;
+     *
+     * #112 – salva pos.na TS do último id da lista
+     *
+     * @param token
+     */
+    public void action112(Token token) {
+        variaveisDoContexto.setPosFinal(tabelaDeSimbolos.getDeslocamento());
+    }
+
+    /**
+     * <listapar> ::= ref #111 <lid> #112 ":" <tipo_pre_def> #113 <rep_listapar>;
+     * <listapar> ::= val #114 <lid> #112 ":" <tipo_pre_def> #113 <rep_listapar>;
+     *
+     * #113 – Preenche atributos dos id’s da lista de 
+     * parâmetros, considerando categoria = “Parâmetro”, TipoAtual e MPP.
+     * Insere todos os parâmetros em uma lista auxiliar 
+     * ( ListaPar), a ser usada na chamada de proc.
+     *
+     * @param token
+     */
+    public void action113(Token token) {
+        List<Parametro> parametrosProcedimento = variaveisDoContexto.peekProcedimento().getListaParametros();
+
+        int posInicial = variaveisDoContexto.getPosInicial();
+        int posFinal = variaveisDoContexto.getPosFinal();
+
+        List<Parametro> paramDeclarados = tabelaDeSimbolos.getParametrosDaPosicao(posInicial, posFinal);
+
+        for (Parametro parametro : paramDeclarados) {
+            parametro.setTipo(variaveisDoContexto.getTipoAtual());
+            parametro.setMecanismoPassagem(variaveisDoContexto.getMecanismoPassagem());
+            parametrosProcedimento.add(parametro);
+        }
+
+    }
+
+    /**
+     * <listapar> ::= val #111 <lid> #112 ":" <tipo_pre_def> #113 <rep_listapar>;
+     *
+     * @param token
+     */
+    public void action114(Token token) {
+        variaveisDoContexto.setMecanismoPassagem(MecanismoPassagem.VALOR);
+        variaveisDoContexto.setContextoLID(ContextoLID.PAR_FORMAL);
+        variaveisDoContexto.setPosInicial(tabelaDeSimbolos.getDeslocamento());
+    }
+
+    /**
      * <lid>    ::= id #115 <rep_id>;
      * <rep_id> ::= "," id #115 <rep_id>;
      *
@@ -190,6 +382,49 @@ public class Semantico implements Constants {
                     tabelaDeSimbolos.incrementaDeslocamento();
                 }
                 break;
+            }
+            case PAR_FORMAL: {
+                Identificador simbolo = tabelaDeSimbolos.getSimboloDoNivel(lexeme);
+                if (simbolo != null) {
+                    throw new SemanticError("Identificador do parametro '" + lexeme
+                            + "' repetido.");
+                } else {
+                    Parametro parametro = new Parametro(lexeme);
+                    parametro.setNivel(tabelaDeSimbolos.getNivel());
+                    parametro.setDeslocamento(tabelaDeSimbolos.getDeslocamento());
+                    tabelaDeSimbolos.addSimbolo(parametro);
+                    tabelaDeSimbolos.incrementaDeslocamento();
+                }
+                break;
+            }
+            case LEITURA: {
+                Identificador simbolo = tabelaDeSimbolos.getSimbolo(lexeme);
+                if (simbolo == null) {
+                    throw new SemanticError("Identificador '" + lexeme
+                            + "' nao foi declarado");
+                }
+
+                if (simbolo instanceof Variavel) {
+                    Variavel var = (Variavel) simbolo;
+                    if (!(var.getTipo() instanceof PreDefinido)) {
+                        throw new SemanticError("O tipo '"
+                                + var.getTipo().getCategoria() + "' de "
+                                + simbolo.getNome() + " eh invalido para leitura.");
+                    }
+                    return;
+                }
+                if (simbolo instanceof Parametro) {
+                    Parametro param = (Parametro) simbolo;
+                    if (!(param.getTipo() instanceof PreDefinido)) {
+                        throw new SemanticError("O tipo '"
+                                + param.getTipo().getCategoria() + "' de "
+                                + simbolo.getNome() + " eh invalido para leitura.");
+                    }
+                    return;
+                }
+                throw new SemanticError("O identificador '" + simbolo.getNome()
+                        + "' deve ser uma variavel ou parametro e nao "
+                        + simbolo.getCategoria());
             }
         }
     }
@@ -397,17 +632,774 @@ public class Semantico implements Constants {
     }
 
     /**
-     * Define como constante de contexto a constante com o tipo passado como
-     * parametro
+     * <comando> ::= id #126 <rcomid>;
      *
-     * @param tipo
-     * @param valor
+     * #126 – Se id não está declarado (não esta na TS)
+     * então ERRO(“Identificador não declarado”)
+     * senão guarda posição de id (POSID)
+     *
+     * @param token
+     * @throws SemanticError
      */
-    public void definirConstanteDoContexto(Tipo tipo, String valor) {
-        Constante constanteDoContexto = new Constante(valor);
-        constanteDoContexto.setTipo(tipo);
-        constanteDoContexto.setValor(valor);
-        variaveisDoContexto.setTipoConstante(constanteDoContexto);
+    public void action126(Token token) throws SemanticError {
+        Identificador id = tabelaDeSimbolos.getSimbolo(token.getLexeme());
+        if (id == null) {
+            throw new SemanticError("Identificador '" + token.getLexeme()
+                    + "' nao foi declarado");
+        } else {
+            variaveisDoContexto.pushIdentificador(token.getLexeme());
+        }
+    }
+
+    /**
+     * <comando> ::= se <expressao> #127 entao <comando> <senaoparte>
+     *             | enquanto <expressao> #127 faca <comando>
+     *             | repita <comando> ate <expressao>  #127;
+     *
+     * #127 – Se TipoExpr <> “booleano” e <> “inteiro”
+     *     então ERRO(“Tipo inválido da expressão”)
+     * senao (* G. Código *)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action127(Token token) throws SemanticError {
+        Tipo tipoExpressao = variaveisDoContexto.getTipoExpressao();
+
+        if (!tipoExpressao.getCategoria().isInteger()
+                && !tipoExpressao.getCategoria().isBoolean()) {
+            throw new SemanticError(
+                    "Expressao inválida: o tipo deve ser inteiro ou booleano e nao "
+                    + tipoExpressao.getCategoria());
+        }
+    }
+
+    /**
+     * <comando> ::= leia '(' #128 <lid> ')';
+     *
+     * #128 - contextoLID := “leitura”
+     *
+     * @param token
+     */
+    public void action128(Token token) {
+        variaveisDoContexto.setContextoLID(ContextoLID.LEITURA);
+    }
+
+    /**
+     * #129 – contextoEXPR := “impressão”
+     * se TipoExpr <> inteiro/real/caracter/cadeia
+     *     então ERRO(“tipo invalido para impressão”)
+     * senão (* G. Código *)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action129(Token token) throws SemanticError {
+        variaveisDoContexto.pushContextoEXPR(ContextoEXPR.IMPRESSAO);
+
+        Tipo tipoExpr = variaveisDoContexto.getTipoExpressao();
+
+        if (!tipoExpr.getCategoria().isInteger()
+                && !tipoExpr.getCategoria().isReal()
+                && !tipoExpr.getCategoria().isChar()
+                && !tipoExpr.getCategoria().isCadeia()) {
+            throw new SemanticError("Tipo " + tipoExpr.getCategoria()
+                    + " invalido para impressao.");
+        }
+
+    }
+
+    /**
+     * <rcomid> ::= #130 ":=" <expressao> #131;
+     *
+     * #130 –
+     * Se categoria de id = “Variável” ou “Parâmetro”
+     *     então se tipo de id = “vetor”
+     *         então ERRO (“id. Deveria ser indexado”)
+     *     senão TipoLadoEsq := tipo de id
+     * senão se categoria de id = “função”
+     *     então se fora do escopo da função id
+     *         então ERRO(“fora do escopo da função”)
+     *     senão TipoLadoEsq := tipo da função
+     * senão ERRO (“id. deveria ser var/par/função”)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action130(Token token) throws SemanticError {
+        String lexeme = token.getLexeme();
+
+        Identificador id = tabelaDeSimbolos.getSimbolo(lexeme);
+
+        if (id instanceof Variavel) {
+            Variavel var = (Variavel) id;
+
+            // se tipo de id = vetor
+            if (var.getTipo().getCategoria().isVetor()) {
+                throw new SemanticError("Identificador '" + lexeme
+                        + "' e vetor e deve ser indexado");
+            } else {
+                variaveisDoContexto.setTipoLadoEsquerdo(var.getTipo());
+            }
+        } else if (id instanceof Parametro) {
+            Parametro param = (Parametro) id;
+
+            // se tipo de id = vetor
+            if (param.getTipo().getCategoria().isVetor()) {
+                throw new SemanticError("Identificador '" + lexeme
+                        + "' e vetor e deve ser indexado");
+            } else {
+                variaveisDoContexto.setTipoLadoEsquerdo(param.getTipo());
+            }
+        } else if (id instanceof Funcao) {
+            Funcao funcao = (Funcao) id;
+
+            if (!funcao.getNome().equals(variaveisDoContexto.peekFuncaoEscopo())) {
+                throw new SemanticError("atribuicao de retorno em "
+                        + funcao.getNome() + " fora do escopo da funcao");
+            }
+
+            funcao.setUtilizouRetorno(true);
+            variaveisDoContexto.setTipoLadoEsquerdo(funcao.getTipoRetorno());
+        } else {
+            throw new SemanticError("Identificador '" + lexeme
+                    + "' deveria ser um parametro, funcao ou variavel e nao "
+                    + id.getCategoria());
+        }
+    }
+
+    /**
+     * <rcomid> ::= #130 ":=" <expressao> #131;
+     *
+     * #131 – se TipoExpr não compatível com tipoLadoesq
+     *     então ERRO (“tipos incompatíveis”)
+     * senão (* G. Código *)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action131(Token token) throws SemanticError {
+        Tipo tipoExpressao = variaveisDoContexto.getTipoExpressao();
+        Tipo tipoLadoEsquerdo = variaveisDoContexto.getTipoLadoEsquerdo();
+
+        if (!tipoLadoEsquerdo.isCompativelAtribuicao(tipoExpressao)) {
+            throw new SemanticError("Tipo da expressao "
+                    + tipoExpressao.getCategoria()
+                    + " incompativel com lado esquerdo "
+                    + tipoLadoEsquerdo.getCategoria());
+        }
+        variaveisDoContexto.popIdentificador();
+    }
+
+    /**
+     * <comando> ::= "(" #134 <expressao> #135 <rep_expressao> ")" #136;
+     *
+     * #134 – se categoria de id <> procedure
+     * então ERRO(“id deveria ser uma procedure”)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action134(Token token) throws SemanticError {
+        Identificador simbolo = tabelaDeSimbolos.getSimbolo(variaveisDoContexto.peekIdentificador());
+
+        if (!(simbolo instanceof Procedimento) || simbolo instanceof Funcao) {
+            throw new SemanticError(simbolo.getNome() + " deveria ser um procedimento.");
+        }
+    }
+
+    /**
+     * <comando> ::= "(" #134 <expressao> #135 <rep_expressao> ")" #136;
+     *
+     * #135 – NPA := 1 (Número de Parâmetros Atuais)
+     * contextoEXPR := “par-atual”
+     * Verifica se existe Parâmetro Formal correspondente
+     * e se o tipo e o MPP são compatíveis.
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action135(Token token) throws SemanticError {
+        variaveisDoContexto.setNrParametros(1);
+        variaveisDoContexto.pushContextoEXPR(ContextoEXPR.PAR_ATUAL);
+        analisaParametros(token);
+    }
+
+    /**
+     * <comando> ::= "(" #134 <expressao> #135 <rep_expressao> ")" #136;
+     *
+     * #136 – se NPA = NPF
+     *     então (* G. Código para chamada de proc*)
+     * senão ERRO(“Erro na quantidade de parâmetros”)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action136(Token token) throws SemanticError {
+        Procedimento procedimento = (Procedimento) tabelaDeSimbolos.getSimbolo(variaveisDoContexto.popIdentificador());
+
+        int npf = procedimento.getListaParametros().size();
+        int npa = variaveisDoContexto.getNrParametros();
+        if (npf != npa) {
+            throw new SemanticError("Erro na quantidade de parametros");
+        }
+    }
+
+    /**
+     * <rcomid> ::= î;
+     *
+     * #137 - se categoria de id <> procedure
+     * então ERRO(“id deveria ser uma procedure”)
+     * senão se NPF <> 0
+     * então ERRO(“Erro na quant.de parâmetros”)
+     * senão (* G. Código p/ chamada de proc. *)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action137(Token token) throws SemanticError {
+        Identificador identificador = tabelaDeSimbolos.getSimbolo(variaveisDoContexto.popIdentificador());
+
+        // Verificar se pode ser funcao tambem
+        if (!(identificador instanceof Procedimento)) {
+            throw new SemanticError("Id " + identificador.getNome()
+                    + " deveria ser um " + identificador.getCategoria());
+        }
+        Procedimento procedimento = (Procedimento) identificador;
+
+        if (!procedimento.getListaParametros().isEmpty()) {
+            throw new SemanticError("Erro na quantidade de parametros do "
+                    + procedimento.getCategoria() + " "
+                    + identificador.getNome() + ".");
+        }
+
+    }
+
+    /**
+     * <rep_expressao> ::= "," <expressao> #138 <rep_expressao> | î;
+     *
+     * #138 – Trata expressão de acordo com ContextoEXPR (“par-atual” ou “impressão”)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action138(Token token) throws SemanticError {
+        switch (variaveisDoContexto.peekContextoEXPR()) {
+            case PAR_ATUAL: {
+                variaveisDoContexto.setNrParametros(variaveisDoContexto.getNrParametros() + 1);
+                analisaParametros(token);
+                break;
+            }
+            case IMPRESSAO: {
+                Tipo tipoExpressao = variaveisDoContexto.getTipoExpressao();
+                if (!tipoExpressao.getCategoria().isInteger()
+                        && tipoExpressao.getCategoria().isReal()
+                        && tipoExpressao.getCategoria().isChar()
+                        && tipoExpressao.getCategoria().isCadeia()) {
+                    throw new SemanticError("O tipo '"
+                            + tipoExpressao.getCategoria()
+                            + "' e invalido para impressao.");
+                }
+            }
+        }
+    }
+
+    /**
+     * <expressao> ::= <expsimp> #139 <resto_expressao>;
+     *
+     * #139 – TipoExpr := TipoExpSimples
+     *
+     * @param token
+     */
+    public void action139(Token token) {
+        variaveisDoContexto.setTipoExpressao(variaveisDoContexto.getTipoExpSimples());
+    }
+
+    /**
+     * <resto_expressao> ::= <oprel> <expsimp> #140;
+     *
+     * #140 – Se TipoExpSimples não compatível com TipoExpr
+     * então ERRO (“Operandos incompatíveis”)
+     * senão TipoExpr := “booleano”
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action140(Token token) throws SemanticError {
+        Tipo tipoExpressao = variaveisDoContexto.getTipoExpressao();
+        Tipo tipoExpressaoSimples = variaveisDoContexto.getTipoExpSimples();
+
+        if (!tipoExpressaoSimples.isCompativelOperacao(tipoExpressao)) {
+            throw new SemanticError("Operandos incompativeis, e "
+                    + tipoExpressao.getCategoria() + " e deveria ser "
+                    + tipoExpressaoSimples.getCategoria());
+        }
+        variaveisDoContexto.setTipoExpressao(new PreDefinido(CategoriaTipoSimples.BOOLEAN));
+    }
+
+    /**
+     * <oprel> ::= "=" #141 | "<" #142 | ">" #143 | ">=" #144 | "<=" #145 | "<>" #146;
+     *
+     * @param token
+     */
+    public void action141(Token token) {
+        guardaOperadorRelacional(token);
+    }
+
+    /**
+     * <oprel> ::= "=" #141 | "<" #142 | ">" #143 | ">=" #144 | "<=" #145 | "<>" #146;
+     *
+     * @param token
+     */
+    public void action142(Token token) {
+        guardaOperadorRelacional(token);
+    }
+
+    /**
+     * <oprel> ::= "=" #141 | "<" #142 | ">" #143 | ">=" #144 | "<=" #145 | "<>" #146;
+     *
+     * @param token
+     */
+    public void action143(Token token) {
+        guardaOperadorRelacional(token);
+    }
+
+    /**
+     * <oprel> ::= "=" #141 | "<" #142 | ">" #143 | ">=" #144 | "<=" #145 | "<>" #146;
+     *
+     * @param token
+     */
+    public void action144(Token token) {
+        guardaOperadorRelacional(token);
+    }
+
+    /**
+     * <oprel> ::= "=" #141 | "<" #142 | ">" #143 | ">=" #144 | "<=" #145 | "<>" #146;
+     *
+     * @param token
+     */
+    public void action145(Token token) {
+        guardaOperadorRelacional(token);
+    }
+
+    /**
+     * <oprel> ::= "=" #141 | "<" #142 | ">" #143 | ">=" #144 | "<=" #145 | "<>" #146;
+     * 
+     * @param token
+     */
+    public void action146(Token token) {
+        guardaOperadorRelacional(token);
+    }
+
+    /**
+     * <expsimp> ::= <termo> #147 <rep_expsimp>;
+     *
+     * #147 – TipoExpSimples := TipoTermo
+     *
+     * @param token
+     */
+    public void action147(Token token) {
+        variaveisDoContexto.setTipoExpSimples(variaveisDoContexto.popTipoTermo());
+    }
+
+    /**
+     * <rep_expsimp> ::= <op_add> #148 <termo> #149 <rep_expsimp>;
+     *
+     * #148 – Se operador não se aplica a TipoExpSimples
+     * então ERRO(“Operador e Operando incompatíveis”)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action148(Token token) throws SemanticError {
+        OperadorRelacional operador = OperadorRelacional.getTipoPorNome(token.getLexeme());
+
+        Tipo tipoExpSimples = variaveisDoContexto.getTipoExpSimples();
+
+        if (operador.isE() || operador.isOu()) {
+            if (!tipoExpSimples.getCategoria().isBoolean()) {
+                throw new SemanticError("Operando do tipo "
+                        + tipoExpSimples.getCategoria()
+                        + " incompativel com o operador '" + operador.getNome()
+                        + "'.");
+            }
+            return;
+
+        }
+        if (operador.isAdicao()) {
+            if (!tipoExpSimples.getCategoria().isNumerico()
+                    && !tipoExpSimples.getCategoria().isCadeia()
+                    && !tipoExpSimples.getCategoria().isChar()) {
+                throw new SemanticError("Operando do tipo "
+                        + tipoExpSimples.getCategoria()
+                        + " incompativel com o operador '" + operador.getNome()
+                        + "'.");
+            }
+            return;
+        }
+
+        if (operador.isDivisao() || operador.isMultiplicacao() || operador.isSubtracao()) {
+            if (!tipoExpSimples.getCategoria().isNumerico()) {
+                throw new SemanticError("Operando do tipo "
+                        + tipoExpSimples.getCategoria()
+                        + " incompativel com o operador '" + operador.getNome()
+                        + "'.");
+            }
+            return;
+        }
+    }
+
+    /**
+     * <rep_expsimp> ::= <op_add> #148 <termo> #149 <rep_expsimp>;
+     *
+     * #149 -
+     * Se TipoTermo incompatível com TipoExpSimples
+     *     então ERRO (“Operandos incompatíveis”)
+     * senão TipoExpSimples := tipo do res. da operação
+     *     (* G. Código de acordo com oppad guardado *)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action149(Token token) throws SemanticError {
+        Tipo tipoDoTermo = variaveisDoContexto.peekTipoTermo();
+        Tipo tipoExpressaoSimples = variaveisDoContexto.getTipoExpSimples();
+
+        if (!tipoExpressaoSimples.isCompativelOperacao(tipoDoTermo)) {
+            throw new SemanticError("Operandos incompativeis ("
+                    + tipoExpressaoSimples.getCategoria() + " com "
+                    + tipoDoTermo.getCategoria() + ")");
+        }
+
+        if (tipoExpressaoSimples.getCategoria().isInteger()
+                && tipoDoTermo.getCategoria().isReal()) {
+            variaveisDoContexto.setTipoExpSimples(new PreDefinido(
+                    CategoriaTipoSimples.REAL));
+            return;
+        }
+
+        if (tipoExpressaoSimples.getCategoria().isChar()
+                && (tipoDoTermo.getCategoria().isChar() || tipoDoTermo.getCategoria().isCadeia())) {
+            variaveisDoContexto.setTipoExpSimples(new PreDefinido(
+                    CategoriaTipoSimples.CADEIA));
+            return;
+        }
+    }
+
+    /**
+     * <op_add> ::= "+" #150 | "-" #151 | ou #152;
+     *
+     * @param token
+     */
+    public void action150(Token token) {
+        guardaOperadorRelacional(token);
+    }
+
+    /**
+     * <op_add> ::= "+" #150 | "-" #151 | ou #152;
+     *
+     * @param token
+     */
+    public void action151(Token token) {
+        guardaOperadorRelacional(token);
+    }
+
+    /**
+     * <op_add> ::= "+" #150 | "-" #151 | ou #152;
+     *
+     * @param token
+     */
+    public void action152(Token token) {
+        guardaOperadorRelacional(token);
+    }
+
+    /**
+     * <termo> ::= <fator> #153 <rep_termo>;
+     *
+     * #153 – TipoTermo := TipoFator
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action153(Token token) {
+        variaveisDoContexto.pushTipoTermo(variaveisDoContexto.getTipoFator());
+    }
+
+    /**
+     * <rep_termo> ::= <op_mult> #154 <fator> #155 <rep_termo>;
+     *
+     * #154 – Se operador não se aplica a TipoTermo então ERRO(“Operador e
+     * Operando incompatíveis”)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action154(Token token) throws SemanticError, Exception {
+        Tipo tipoDoTermo = variaveisDoContexto.peekTipoTermo();
+
+        OperadorRelacional operador = OperadorRelacional.getTipoPorNome(token.getLexeme());
+
+        if (operador.isMultiplicacao() || operador.isDivisao()) {
+            if (!tipoDoTermo.getCategoria().isInteger()
+                    && !tipoDoTermo.getCategoria().isReal()) {
+                throw new SemanticError("Operador '" + operador
+                        + "' e operando (" + tipoDoTermo.getCategoria()
+                        + ") imcompativeis");
+            }
+        } else if (operador.isE()) {
+            if (!tipoDoTermo.getCategoria().isBoolean()) {
+                throw new SemanticError("Operador '" + operador
+                        + "' e operando (" + tipoDoTermo.getCategoria()
+                        + ") imcompativeis");
+            }
+        } else {
+            throw new Exception("Operador desconhecido");
+        }
+    }
+
+    /**
+     * <rep_termo> ::= <op_mult> #154 <fator> #155 <rep_termo>;
+     *
+     * #155 - Se TipoFator incompatível com TipoTermo
+     * então ERRO (“Operandos incompatíveis”)
+     *     senão TipoTermo := tipo do res. da operação
+     *         (* G. Código de acordo com opmult *)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action155(Token token) throws SemanticError {
+        Tipo tipoDoTermo = variaveisDoContexto.peekTipoTermo();
+        Tipo tipoDoFator = variaveisDoContexto.getTipoFator();
+
+        if (!tipoDoTermo.isCompativelOperacao(tipoDoFator)) {
+            throw new SemanticError("Operandos incompativeis ("
+                    + tipoDoTermo.getCategoria() + " com "
+                    + tipoDoFator.getCategoria() + ")");
+        }
+
+        if (tipoDoTermo.getCategoria().isInteger()
+                && tipoDoFator.getCategoria().isReal()) {
+
+            variaveisDoContexto.pushTipoTermo(new PreDefinido(
+                    CategoriaTipoSimples.REAL));
+            return;
+        }
+
+        if (variaveisDoContexto.getOperadorRelacional().isDivisao()) {
+            variaveisDoContexto.pushTipoTermo(new PreDefinido(
+                    CategoriaTipoSimples.REAL));
+            return;
+        }
+
+    }
+
+    /**
+     * <op_mult> ::= "*" #156 | "/" #157 | e #158;
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action156(Token token) {
+        guardaOperadorRelacional(token);
+    }
+
+    /**
+     * <op_mult> ::= "*" #156 | "/" #157 | e #158;
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action157(Token token) {
+        guardaOperadorRelacional(token);
+    }
+
+    /**
+     * <op_mult> ::= "*" #156 | "/" #157 | e #158;
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action158(Token token) {
+        guardaOperadorRelacional(token);
+    }
+
+    /**
+     * <fator> ::= não #159 <fator> #160;
+     *
+     * #159 – se OpNega
+     * então ERRO(“Operadores “não” consecutivos”)
+     * Senão OpNega := true
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action159(Token token) throws SemanticError {
+        if (variaveisDoContexto.isOperadorNegacao()) {
+            throw new SemanticError("Operador 'nao' repetido");
+        }
+        variaveisDoContexto.setOperadorNegacao(true);
+    }
+
+    /**
+     * <fator> ::= não #159 <fator> #160;
+     *
+     * #160 – Se TipoFator <> “booleano”
+     * então ERRO(“Op. ‘não’ exige operando booleano”)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action160(Token token) throws SemanticError {
+        Tipo tipoDoFator = variaveisDoContexto.getTipoFator();
+        if (!tipoDoFator.getCategoria().isBoolean()) {
+            throw new SemanticError(
+                    "Operador 'nao' exige operando booleano e nao "
+                    + tipoDoFator.getCategoria());
+        }
+    }
+
+    /**
+     * <fator> ::= "-" #161 <fator> #162;
+     *
+     * #161 – se OpUnario
+     * então ERRO(“Ops. “unario” consecutivos”)
+     * Senão OpUnario := true
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action161(Token token) throws SemanticError {
+        if (variaveisDoContexto.isOperadorUnario()) {
+            throw new SemanticError("Operadores 'unarios' consecutivos");
+        }
+        variaveisDoContexto.setOperadorUnario(true);
+    }
+
+    /**
+     * <fator> ::= "-" #161 <fator> #162;
+     *
+     * #162 - Se TipoFator <> “inteiro” ou de “real”
+     * então ERRO(“Op. ‘-/+’ exige operando numérico”)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action162(Token token) throws SemanticError {
+        if (!variaveisDoContexto.getTipoFator().getCategoria().isInteger()
+                && !variaveisDoContexto.getTipoFator().getCategoria().isReal()) {
+            throw new SemanticError(
+                    "Operadores \"-/+\" exigem operando numerico");
+        }
+    }
+
+    /**
+     * <fator> ::= "(" #163 <expressao> ")" #164;
+     *
+     * #163 – OpNega := OpUnario := false
+     *
+     * @param token
+     */
+    public void action163(Token token) {
+        variaveisDoContexto.setOperadorNegacao(false);
+        variaveisDoContexto.setOperadorUnario(false);
+    }
+
+    /**
+     * <fator> ::= "(" #163 <expressao> ")" #164;
+     *
+     * #164 – TipoFator := TipoExpr
+     *
+     * @param token
+     */
+    public void action164(Token token) {
+        variaveisDoContexto.setTipoFator(variaveisDoContexto.getTipoExpressao());
+    }
+
+    /**
+     * <fator> ::= <variavel> #165;
+     *
+     * #165 – TipoFator := TipoVar
+     *
+     * @param token
+     */
+    public void action165(Token token) {
+        variaveisDoContexto.setTipoFator(variaveisDoContexto.getTipoVar());
+        variaveisDoContexto.popIdentificador();
+    }
+
+    /**
+     * <fator> ::= <constante_explicita> #166;
+     *
+     * #166 – TipoFator := TipoCte
+     *
+     * @param token
+     */
+    public void action166(Token token) {
+        variaveisDoContexto.setTipoFator(variaveisDoContexto.getTipoConstante().getTipo());
+    }
+
+    /**
+     * <rvar> ::= î #170;
+     *
+     * #170  - se categoria de id = “variável” ou “Parâmetro”
+     * então se tipo de id = “vetor”
+     * então ERRO(“vetor deve ser indexado”)
+     * senão TipoVar := Tipo de id
+     * senão se categoria de id = “função”
+     * então se NPF <> 0
+     * então ERRO(“Erro na quant. de par.”)
+     * senão (* G. Código *)
+     * TipoVar := Tipo res. da função
+     * Senão se categoria de id = “constante”
+     * então TipoVar:= Tipo do id de Const.
+     * Senão ERRO(“esperava-se var,
+     * id-função ou constante”)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action170(Token token) throws SemanticError {
+        Identificador id = tabelaDeSimbolos.getSimbolo(token.getLexeme());
+
+        if (id instanceof Variavel) {
+            Variavel var = (Variavel) id;
+            if (var.getTipo().getCategoria().isVetor()) {
+                throw new SemanticError("Vetor " + token.getLexeme()
+                        + " deve ser indexado.");
+            }
+            variaveisDoContexto.setTipoVar(var.getTipo());
+            return;
+        }
+
+        if (id instanceof Parametro) {
+            Parametro param = (Parametro) id;
+            if (param.getTipo().getCategoria().isVetor()) {
+                throw new SemanticError("Vetor " + token.getLexeme()
+                        + " deve ser indexado.");
+            }
+            variaveisDoContexto.setTipoVar(param.getTipo());
+            return;
+        }
+
+        if (id instanceof Funcao) {
+            Funcao funcao = (Funcao) id;
+
+            if (!funcao.getListaParametros().isEmpty()) {
+                throw new SemanticError("Erro na quantidade de parametros");
+            }
+
+            variaveisDoContexto.setTipoVar(funcao.getTipoRetorno());
+            return;
+        }
+
+        if (id instanceof Constante) {
+            Constante constante = (Constante) id;
+            variaveisDoContexto.setTipoVar(constante.getTipo());
+            return;
+        }
+
+        throw new SemanticError("Esperava-se variavel, funcao ou constante");
     }
 
     /**
@@ -487,6 +1479,101 @@ public class Semantico implements Constants {
             definirConstanteDoContexto(literal, valor);
         } else { // Char
             definirConstanteDoContexto(new PreDefinido(CategoriaTipoSimples.CHAR), valor);
+        }
+    }
+
+    /**
+     * <op_mult> ::= "*" #156 | "/" #157 | e #158;
+     *
+     * guarda operador para futura G. codigo
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    private void guardaOperadorRelacional(Token token) {
+        variaveisDoContexto.setOperadorRelacional(OperadorRelacional.getTipoPorNome(token.getLexeme()));
+    }
+
+    /**
+     * Define como constante de contexto a constante com o tipo passado como
+     * parametro
+     *
+     * @param tipo
+     * @param valor
+     */
+    public void definirConstanteDoContexto(Tipo tipo, String valor) {
+        Constante constanteDoContexto = new Constante(valor);
+        constanteDoContexto.setTipo(tipo);
+        constanteDoContexto.setValor(valor);
+        variaveisDoContexto.setTipoConstante(constanteDoContexto);
+    }
+
+    private void definirTipoPreDefinido(CategoriaTipoSimples categoriaTipo) {
+        PreDefinido tipo = new PreDefinido(categoriaTipo);
+        variaveisDoContexto.setTipoAtual(tipo);
+    }
+
+    /**
+     * Analisa compactibilidade de parametro de função e procedure.
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    private void analisaParametros(Token token) throws SemanticError {
+
+        Procedimento procedimento = (Procedimento) tabelaDeSimbolos.getSimbolo(variaveisDoContexto.peekIdentificador());
+
+        List<Parametro> parametros = procedimento.getListaParametros();
+
+        if (parametros.isEmpty()) {
+            throw new SemanticError(procedimento.getCategoria() + " "
+                    + procedimento.getNome() + " nao possui parametros");
+        }
+
+        if (parametros.size() >= variaveisDoContexto.getNrParametros()) {
+            Parametro parametro = parametros.get(variaveisDoContexto.getNrParametros() - 1);
+
+            if (parametro.getMecanismoPassagem().isReferencia()) {
+
+                Identificador identificador = tabelaDeSimbolos.getSimbolo(token.getLexeme());
+
+                if (identificador == null) {
+                    throw new SemanticError("Parametro passado para "
+                            + procedimento.getCategoria() + " "
+                            + procedimento.getNome()
+                            + " nao possui referencia ou nao eh uma "
+                            + "Variavel, Parametro ou Funcao. ");
+                }
+
+                if (identificador instanceof Parametro
+                        && !((Parametro) identificador).getMecanismoPassagem().isReferencia()) {
+                    throw new SemanticError("Identificador "
+                            + identificador.getNome()
+                            + " passado como parametro para "
+                            + procedimento.getCategoria()
+                            + " nao possui referencia. ");
+                }
+
+                if ((!(identificador instanceof Variavel)
+                        && !(identificador instanceof Parametro) && !(identificador instanceof Funcao))) {
+                    throw new SemanticError("Identificador "
+                            + identificador.getNome()
+                            + " passado como parametro " + parametro + " para "
+                            + procedimento.getCategoria()
+                            + " nao possui referencia. ");
+                }
+            }
+
+            Tipo ctipoParametro = parametro.getTipo();
+
+            Tipo ctipoExpressao = variaveisDoContexto.getTipoExpressao();
+            // Verifica se o tipo do parametro eh compativel com o passado.
+            if (!ctipoParametro.isCompativelAtribuicao(ctipoExpressao)) {
+                throw new SemanticError(
+                        "Tipo de parametro incompativel. Esperava-se "
+                        + ctipoParametro.getCategoria() + " e veio "
+                        + ctipoExpressao.getCategoria());
+            }
         }
     }
 }

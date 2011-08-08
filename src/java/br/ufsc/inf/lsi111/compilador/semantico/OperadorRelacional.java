@@ -2,7 +2,7 @@ package br.ufsc.inf.lsi111.compilador.semantico;
 
 public enum OperadorRelacional {
 
-	NENHUM(""), MULTIPLICACAO("*"), DIVISAO("/"), DIV("div"), ADICAO("+"), SUBTRACAO(
+	NENHUM(""), MULTIPLICACAO("*"), DIVISAO("/"), ADICAO("+"), SUBTRACAO(
 			"-"), OU("ou"), E("e"),
 
 	IGUAL("="), MENOR("<"), MAIOR(">"), MAIOR_IGUAL(">="), MENOR_IGUAL("<="), DIFERENTE(
@@ -20,10 +20,6 @@ public enum OperadorRelacional {
 
 	public boolean isDivisao() {
 		return equals(DIVISAO);
-	}
-
-	public boolean isDiv() {
-		return equals(DIV);
 	}
 
 	public boolean isE() {
