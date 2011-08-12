@@ -268,18 +268,6 @@ public class VariaveisDoContexto {
     }
 
     /**
-     * TODO
-     */
-    private int nrIndices = 0;
-
-    public int getNrIndices() {
-        return nrIndices;
-    }
-
-    public void setNrIndices(int nrIndices) {
-        this.nrIndices = nrIndices;
-    }
-    /**
      * Utilizado para armazenar o mecanismo de passagem.
      */
     private MecanismoPassagem mecanismoPassagem;

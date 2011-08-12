@@ -792,6 +792,60 @@ public class Semantico implements Constants {
     }
 
     /**
+     * <rcomid> ::= "[" #132 <expressao> #133 "]" ":=" <expressao> #131;
+     *
+     * #132– se categoria de id <> “variável”
+     *     então ERRO (“esperava-se uma variável”)
+     * senao se tipo de id <> vetor e <> de cadeia
+     *     então ERRO(“apenas vetores e cadeias podem ser indexados”)
+     * senão TipoVarIndexada = tipo (vetor/cadeia)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action132(Token token) throws SemanticError {
+        Identificador id = tabelaDeSimbolos.getSimbolo(variaveisDoContexto.peekIdentificador());
+
+        if (!(id instanceof Variavel)) {
+            throw new SemanticError("Identificador '" + id.getNome() + "' deveria ser uma variavel");
+        }
+
+        Variavel variavel = (Variavel) id;
+
+        if (!variavel.getTipo().getCategoria().isVetor()
+                && !variavel.getTipo().getCategoria().isCadeia()) {
+            throw new SemanticError("Apenas vetores e cadeias podem ser indexados");
+        }
+        variaveisDoContexto.pushTipoVarIndexada(variavel.getTipo());
+    }
+
+    /**
+     * <rcomid> ::= "[" #132 <expressao> #133 "]" ":=" <expressao> #131;
+     *
+     * #133 – se TipoExpr <> “inteiro”
+     *     então ERRO(“tipo do índice inválido”)
+     * senão se TipoVarIndexada = “vetor”
+     *     então TipoLadoEsq := TipoElementos do vetor
+     * senão TipoLadoEsq := caracter
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action133(Token token) throws SemanticError {
+        Tipo tipoVarIndexada = variaveisDoContexto.peekTipoVarIndexada();
+
+        Tipo tipoExpressao = variaveisDoContexto.getTipoExpressao();
+        if (!tipoExpressao.getCategoria().isInteger()) {
+            throw new SemanticError("Índice de vetor e cadeia deve ser INTEIRO.");
+        } else if (tipoVarIndexada.getCategoria().isVetor()) {
+            Vetor vetor = (Vetor) tipoVarIndexada;
+            variaveisDoContexto.setTipoLadoEsquerdo(vetor.getTipo());
+        } else {
+            variaveisDoContexto.setTipoLadoEsquerdo(new PreDefinido(CategoriaTipoSimples.CHAR));
+        }
+    }
+
+    /**
      * <comando> ::= "(" #134 <expressao> #135 <rep_expressao> ")" #136;
      *
      * #134 – se categoria de id <> procedure
@@ -1340,21 +1394,87 @@ public class Semantico implements Constants {
     }
 
     /**
+     * <rvar> ::= "(" #167 <expressao> #135 <rep_expressao> ")" #168;
+     *
+     * #167 – se categoria de id <> função
+     *     então ERRO(“id deveria ser uma função”)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action167(Token token) throws SemanticError {
+        Identificador id = tabelaDeSimbolos.getSimbolo(variaveisDoContexto.peekIdentificador());
+
+        if (!(id instanceof Funcao)) {
+            throw new SemanticError("ID de função era esperado.");
+        }
+    }
+
+    /**
+     * <rvar> ::= "(" #167 <expressao> #135 <rep_expressao> ")" #168;
+     *
+     * #168 – se NPA = NPF
+     * então TipoVar := Tipo do resultado da função
+     *     (* G. Código chamada de função *)
+     * senão ERRO(“Erro na quantidade de parâmetros”)
+     *
+     * @param token
+     * @throws SemanticError
+     */
+    public void action168(Token token) throws SemanticError {
+        Funcao funcao = (Funcao) tabelaDeSimbolos.getSimbolo(variaveisDoContexto.peekIdentificador());
+
+        int npf = funcao.getListaParametros().size();
+        int npa = variaveisDoContexto.getNrParametros();
+        if (npf != npa) {
+            throw new SemanticError(
+                    "Erro na quantidade de parametros, deveria ser " + npf + " e nao " + npa);
+        }
+
+        variaveisDoContexto.setTipoVar(funcao.getTipoRetorno());
+        variaveisDoContexto.popContextoEXPR();
+    }
+
+    /**
+     * <rvar> ::= "[" #132 <expressao> #169 "]";
+     *
+     * #169 – se TipoExpr <> “inteiro”
+     *     então ERRO(“tipo do índice inválido”)
+     * senão se TipoVarIndexada = “vetor”
+     *     então TipoVar := TipoElementos do vetor
+     * senão TipoVar := caracter
+     *
+     * @param token
+     */
+    public void action169(Token token) throws SemanticError {
+        Tipo tipoVarIndexada = variaveisDoContexto.peekTipoVarIndexada();
+
+        Tipo tipoExpressao = variaveisDoContexto.getTipoExpressao();
+        if (!tipoExpressao.getCategoria().isInteger()) {
+            throw new SemanticError("Índice de vetor e cadeia deve ser INTEIRO.");
+        } else if (tipoVarIndexada.getCategoria().isVetor()) {
+            Vetor vetor = (Vetor) tipoVarIndexada;
+            variaveisDoContexto.setTipoLadoEsquerdo(vetor.getTipo());
+        } else {
+            variaveisDoContexto.setTipoLadoEsquerdo(new PreDefinido(CategoriaTipoSimples.CHAR));
+        }
+    }
+
+    /**
      * <rvar> ::= î #170;
      *
      * #170  - se categoria de id = “variável” ou “Parâmetro”
-     * então se tipo de id = “vetor”
-     * então ERRO(“vetor deve ser indexado”)
-     * senão TipoVar := Tipo de id
-     * senão se categoria de id = “função”
-     * então se NPF <> 0
-     * então ERRO(“Erro na quant. de par.”)
-     * senão (* G. Código *)
-     * TipoVar := Tipo res. da função
-     * Senão se categoria de id = “constante”
-     * então TipoVar:= Tipo do id de Const.
-     * Senão ERRO(“esperava-se var,
-     * id-função ou constante”)
+     *     então se tipo de id = “vetor”
+     *         então ERRO(“vetor deve ser indexado”)
+     *     senão TipoVar := Tipo de id
+     *     senão se categoria de id = “função”
+     *         então se NPF <> 0
+     *             então ERRO(“Erro na quant. de par.”)
+     *         senão (* G. Código *)
+     *         TipoVar := Tipo res. da função
+     *     Senão se categoria de id = “constante”
+     *         então TipoVar:= Tipo do id de Const.
+     *     Senão ERRO(“esperava-se var, id-função ou constante”)
      *
      * @param token
      * @throws SemanticError
