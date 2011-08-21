@@ -32,11 +32,11 @@ public class Intervalo extends Tipo {
 
     @Override
     public boolean isCompativelAtribuicao(Tipo tipo) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return this.limiteInferior.getTipo().isCompativelAtribuicao(tipo);
     }
 
     @Override
     public boolean isCompativelOperacao(Tipo tipo) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return this.limiteInferior.getTipo().isCompativelOperacao(tipo);
     }
 }

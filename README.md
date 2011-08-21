@@ -8,5 +8,5 @@ Instructions
 
 To run the compiler interface run
 
-java -jar runnable/lsi111.jar
+java -jar dist/lsi111.jar
 

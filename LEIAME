@@ -8,5 +8,5 @@ Instrucoes
 ----------
 
 Para executar a interface do compilador use
-java -jar runnable/lsi111.jar
+java -jar dist/lsi111.jar
 
