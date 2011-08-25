@@ -1,0 +1,66 @@
+const inteiro a = 5;
+const real b = 5.5;
+const booleano c = falso;
+const booleano d = c; 
+const caracter letra = 'a';
+
+var inter,inter2,inter3 : intervalo 'a' .. 'c';
+var sauron : intervalo 1 .. 10;
+var carandiru : cadeia [255];
+var array : vetor [25] de caracter;
+var array2 : vetor [2555] de inteiro;
+var bola, rede, tenis : inteiro;
+var compilador : real;
+var mentira, verdade, historia : booleano;
+
+proc faca_algo(ref par1,par2 : inteiro; val par3, par4: real);
+    const inteiro a = 4;
+    const real b = 2.2222e10;
+    const caracter letra = 'b';
+    var carandiru : cadeia [0];
+    inicio
+        escreva(letra);
+        par3 := par3 + par4;
+        par1 := par2;
+        par3 := par2 + par4;
+        carandiru := letra + letra + letra;
+    fim;
+
+proc faca_nada;
+    inicio
+    fim;
+
+funcao faca_tudo(ref par1,par2,par3: booleano):inteiro;
+    const inteiro a = 3;
+    const real b = 4444.222e11231;
+    var c : real;
+    var d: inteiro;
+    inicio
+        c := b + a;
+        d := a + a;
+        faca_tudo := (d - a)*2e30;
+        c := 2/2;
+    fim;
+
+inicio
+    faca_algo(bola, rede, a, compilador);
+    compilador := faca_tudo(mentira, verdade, historia);
+    bola := faca_tudo(verdade, verdade, historia);
+    #problema na linha abaixo?
+    #enquanto((verdade <> mentira) ou historia e (verdade ou (b >= b)))
+    enquanto((verdade <> mentira) ou historia e mentira = verdade ou verdade e (verdade ou (mentira))) faca
+        leia(bola);
+    #problema na linha abaixo?
+    #array[1] := array[2];
+    array[1] := 'a';
+    faca_nada;
+    #problema na linha abaixo?
+    #se ((5>4) e (5<3) ou (5=5)) entao
+    se (5>4) e (5<3) entao
+        faca_nada;
+    se (nao verdade) entao
+        faca_nada;
+    se (- 5) entao
+        faca_nada;
+    carandiru[2] := 'b';
+fim.
