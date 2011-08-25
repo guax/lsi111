@@ -1645,6 +1645,8 @@ public class Semantico implements Constants {
 
         List<Parametro> parametros = procedimento.getListaParametros();
 
+        Collections.sort(parametros);
+
         if (parametros.isEmpty()) {
             throw new SemanticError(procedimento.getCategoria() + " "
                     + procedimento.getNome() + " nao possui parametros");
