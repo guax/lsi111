@@ -19,6 +19,7 @@ import br.ufsc.inf.lsi111.compilador.semantico.tipo.Tipo;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.Vetor;
 import br.ufsc.inf.lsi111.compilador.semantico.tipo.constants.CategoriaTipoSimples;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 import java.util.List;
 
 public class Semantico implements Constants {
